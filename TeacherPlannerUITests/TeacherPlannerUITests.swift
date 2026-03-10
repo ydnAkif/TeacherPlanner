@@ -1,6 +1,6 @@
 //
 //  TeacherPlannerUITests.swift
-//  TeacherPlannerUITests
+//  TeacherPlanner
 //
 //  Created by Akif AYDIN on 9.03.2026.
 //
@@ -8,34 +8,43 @@
 import XCTest
 
 final class TeacherPlannerUITests: XCTestCase {
+    var app: XCUIApplication!
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        app.launch()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        app = nil
     }
 
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testOnboardingAppears() {
+        // İlk açılışta onboarding görünmeli
+        XCTAssertTrue(app.staticTexts["Hoş Geldiniz"].waitForExistence(timeout: 5))
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testOnboardingFormValidation() {
+        let schoolNameField = app.textFields["Okul Adı"]
+        let yearField = app.textFields["Akademik Yıl"]
+        let devamButton = app.buttons["Devam"]
+
+        // Form boşken Devam butonu disabled olmalı
+        XCTAssertFalse(devamButton.isEnabled)
+
+        // Okul adı girilince
+        schoolNameField.tap()
+        schoolNameField.typeText("Atatürk Ortaokulu")
+
+        // Hala disabled (yıl boş)
+        XCTAssertFalse(devamButton.isEnabled)
+
+        // Yıl girilince
+        yearField.tap()
+        yearField.typeText("2025-2026")
+
+        // Artık enabled olmalı
+        XCTAssertTrue(devamButton.isEnabled)
     }
 }

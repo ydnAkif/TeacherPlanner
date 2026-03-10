@@ -1,0 +1,148 @@
+//
+//  PlannerItemListView.swift
+//  TeacherPlanner
+//
+//  Created by Akif AYDIN on 9.03.2026.
+//
+
+import SwiftData
+import SwiftUI
+
+struct PlannerItemListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \PlannerItem.createdAt, order: .reverse) private var items: [PlannerItem]
+
+    @StateObject private var viewModel = PlannerItemsViewModel()
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if items.isEmpty {
+                    emptyState
+                } else {
+                    itemList
+                }
+            }
+            .navigationTitle("Görevler")
+            .searchable(text: $viewModel.searchText, prompt: "Ara...")
+            .toolbar { toolbar }
+            .sheet(isPresented: .constant(false)) { EditPlannerItemView() }  // placeholder
+            .overlay(alignment: .bottom) { addButton }
+            .alert("Hata", isPresented: .constant(viewModel.errorMessage != nil)) {
+                Button("Tamam") { viewModel.errorMessage = nil }
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
+            .onAppear {
+                viewModel.setup(modelContext: modelContext)
+            }
+        }
+    }
+
+    // MARK: - Toolbar
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Menu {
+                Picker("Filtre", selection: $viewModel.selectedType) {
+                    Text("Tümü").tag(nil as PlannerItemType?)
+                    ForEach(PlannerItemType.allCases, id: \.self) { type in
+                        Text(type.displayName).tag(type as PlannerItemType?)
+                    }
+                }
+
+                Divider()
+
+                Button(viewModel.isEditing ? "Bitti" : "Seç") {
+                    viewModel.isEditing.toggle()
+                    if !viewModel.isEditing { viewModel.selectedItems.removeAll() }
+                }
+
+                if viewModel.isEditing && !viewModel.selectedItems.isEmpty {
+                    Button(role: .destructive) {
+                        viewModel.deleteSelected(from: items)
+                    } label: {
+                        Label("Sil (\(viewModel.selectedItems.count))", systemImage: "trash")
+                    }
+
+                    Button {
+                        viewModel.completeSelected(from: items)
+                    } label: {
+                        Label("Tamamla", systemImage: "checkmark.circle")
+                    }
+                }
+            } label: {
+                Image(systemName: viewModel.isEditing
+                    ? "checkmark.circle.fill"
+                    : "line.3.horizontal.decrease.circle")
+            }
+        }
+    }
+
+    // MARK: - Item List
+    private var itemList: some View {
+        List {
+            let filtered = viewModel.filteredItems(from: items)
+            if filtered.isEmpty {
+                ContentUnavailableView {
+                    Label("Sonuç Bulunamadı", systemImage: "magnifyingglass")
+                } description: {
+                    Text("Arama kriterlerinizi değiştirin")
+                }
+            } else {
+                ForEach(filtered) { item in
+                    PlannerItemRow(item: item, onToggle: { viewModel.toggleCompleted(item) })
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                viewModel.deleteItem(item)
+                            } label: {
+                                Label("Sil", systemImage: "trash")
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if viewModel.isEditing {
+                                viewModel.toggleSelection(for: item)
+                            }
+                        }
+                        .overlay {
+                            if viewModel.isEditing {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        viewModel.selectedItems.contains(item.id)
+                                        ? Color.blue : Color.clear,
+                                        lineWidth: 2)
+                                Image(systemName: viewModel.selectedItems.contains(item.id)
+                                      ? "checkmark.circle.fill" : "circle")
+                                    .font(.title2)
+                                    .foregroundStyle(.blue)
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            }
+                        }
+                }
+            }
+        }
+    }
+
+    // MARK: - Empty State
+    private var emptyState: some View {
+        EmptyStateView(
+            icon: "checklist",
+            title: "Henüz Görev Yok",
+            message: "Yeni görev veya not eklemek için + butonuna tıklayın",
+            actionLabel: "Görev Ekle",
+            action: { /* sheet */ }
+        )
+    }
+
+    // MARK: - Add Button
+    private var addButton: some View {
+        // Handled via toolbar sheet in a real scenario; this is a placeholder
+        EmptyView()
+    }
+}
+
+#Preview {
+    PlannerItemListView()
+}

@@ -9,6 +9,34 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>TeacherPlannerWidgetsExtension.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>5EB743572F5F23620078A3DE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5EB743662F5F23650078A3DE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5EB743702F5F23650078A3DE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5EB744502F5F52DC0078A3DE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 	</dict>
 </dict>
 </plist>
