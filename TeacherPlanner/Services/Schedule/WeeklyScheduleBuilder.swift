@@ -10,7 +10,7 @@ import SwiftData
 
 /// Haftalık program grid'i oluşturan servis
 @MainActor
-struct WeeklyScheduleBuilder: WeeklyScheduleBuilding {
+final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
     private let modelContext: ModelContext
 
     init(modelContext: ModelContext) {

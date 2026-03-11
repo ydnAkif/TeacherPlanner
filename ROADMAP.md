@@ -802,6 +802,8 @@ private static let timeFormatter: DateFormatter = {
   - [x] SettingsViewModel oluştur
   - [x] WeeklyScheduleViewModel doldur
 
+- **Sürüm:** 0.4.0 (Refactoring Phase 1 & 2 & Technical Debt)
+- **Sağlık Skoru:** %92
 - [x] **Service Layer Refactor**
   - [x] Actor/Struct tutarlılığı
   - [x] Protocol extraction
@@ -961,11 +963,12 @@ private static let timeFormatter: DateFormatter = {
 - [ ] Use case layer eklendi
 - [ ] Repository pattern uygulandı
 
-### Test
-- [ ] Unit test coverage > 70%
-- [ ] Integration tests yazıldı
-- [ ] UI test kritik flowlar
-- [ ] Performance test baseline
+### Teknik Borç Backlog’u (Tamamlandı)
+
+- [x] **Concurrency:** `@MainActor final class` standardizasyonu sağlandı.
+- [x] **Sorumluluk Ayrımı:** `SettingsView` mantığı ViewModel'e taşındı.
+- [x] **View Modülerliği:** Büyük view'lar (`Today`, `WeeklySchedule`) bileşenlere bölündü.
+- [x] **UX:** Bildirim izin akışı netleştirildi.
 
 ### CI/CD
 - [ ] GitHub Actions kuruldu

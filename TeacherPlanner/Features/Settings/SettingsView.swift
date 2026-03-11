@@ -15,18 +15,14 @@ struct SettingsView: View {
 
     @StateObject private var viewModel = SettingsViewModel()
 
-    @AppStorage(Constants.Notification.Keys.enabled) private var notificationsEnabled = true
-    @AppStorage(Constants.Notification.Keys.minutesBefore) private var reminderMinutesBefore = Constants.Notification.defaultReminderMinutesBefore
-    @AppStorage(Constants.UI.Keys.appearanceMode) private var appearanceMode = 0
-
     var body: some View {
         NavigationStack {
             Form {
-                Section("Bildirimler") {
-                    Toggle("Ders Bildirimleri", isOn: $notificationsEnabled)
+                Section(header: Text("Bildirimler"), footer: Text(viewModel.notificationsEnabled && !viewModel.notificationPermissionGranted ? "⚠️ Bildirimler açık ancak uygulama izinlerine sahip değil. Lütfen 'Bildirim İzni Ver' butonuyla izin verin." : "")) {
+                    Toggle("Ders Bildirimleri", isOn: $viewModel.notificationsEnabled)
 
-                    if notificationsEnabled {
-                        Picker("Hatırlatma Zamanı", selection: $reminderMinutesBefore) {
+                    if viewModel.notificationsEnabled {
+                        Picker("Hatırlatma Zamanı", selection: $viewModel.reminderMinutesBefore) {
                             ForEach(Constants.Notification.reminderOptions, id: \.self) { minutes in
                                 Text("\(minutes) dakika önce").tag(minutes)
                             }
@@ -34,13 +30,13 @@ struct SettingsView: View {
 
                         Button(action: viewModel.requestNotificationPermission) {
                             HStack {
-                                Text("Bildirim İzni Ver")
+                                Text(viewModel.notificationPermissionGranted ? "Bildirim İzni Verildi" : "Bildirim İzni Ver")
                                 Spacer()
                                 if viewModel.notificationPermissionGranted {
-                                    Label("Verildi", systemImage: "checkmark.circle.fill")
+                                    Image(systemName: "checkmark.circle.fill")
                                         .foregroundStyle(.green)
                                 } else {
-                                    Label("Verilmedi", systemImage: "exclamationmark.circle.fill")
+                                    Image(systemName: "exclamationmark.circle.fill")
                                         .foregroundStyle(.red)
                                 }
                             }
@@ -49,7 +45,7 @@ struct SettingsView: View {
                 }
 
                 Section("Görünüm") {
-                    Picker("Tema", selection: $appearanceMode) {
+                    Picker("Tema", selection: $viewModel.appearanceMode) {
                         Text("Sistem").tag(0)
                         Text("Açık").tag(1)
                         Text("Koyu").tag(2)

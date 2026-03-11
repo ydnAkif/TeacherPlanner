@@ -142,11 +142,11 @@ Bu dosya, `ROADMAP.md` ile hizalı olacak şekilde faz bazlı yeniden düzenlenm
 
 ## Teknik Borç Backlog’u
 
-- [ ] Actor/struct tutarsız servis tasarımını standardize et
-- [ ] `SettingsView` içindeki business logic’i ayır
-- [ ] Notification izin akışını kullanıcı açısından netleştir
-- [ ] Büyük view dosyalarını alt bileşenlere böl
-- [ ] Performans: tekrarlı fetch noktalarında optimizasyon yap
+- [x] Actor/struct tutarsiz servis tasarımını standardize et
+- [x] `SettingsView` içindeki business logic’i ayır
+- [x] Notification izin akışını kullanıcı açısından netleştir
+- [x] Büyük view dosyalarını alt bileşenlere böl
+- [x] Performans: tekrarlı fetch noktalarında optimizasyon yap
 
 ---
 

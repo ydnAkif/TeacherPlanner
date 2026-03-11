@@ -21,7 +21,7 @@ struct PlannerItemListView: View {
                 if items.isEmpty {
                     emptyState
                 } else {
-                    itemList
+                    PlannerItemList(items: items, viewModel: viewModel)
                 }
             }
             .navigationTitle("Görevler")
@@ -74,52 +74,6 @@ struct PlannerItemListView: View {
                 Image(systemName: viewModel.isEditing
                     ? "checkmark.circle.fill"
                     : "line.3.horizontal.decrease.circle")
-            }
-        }
-    }
-
-    // MARK: - Item List
-    private var itemList: some View {
-        List {
-            let filtered = viewModel.filteredItems(from: items)
-            if filtered.isEmpty {
-                ContentUnavailableView {
-                    Label("Sonuç Bulunamadı", systemImage: "magnifyingglass")
-                } description: {
-                    Text("Arama kriterlerinizi değiştirin")
-                }
-            } else {
-                ForEach(filtered) { item in
-                    PlannerItemRow(item: item, onToggle: { viewModel.toggleCompleted(item) })
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                viewModel.deleteItem(item)
-                            } label: {
-                                Label("Sil", systemImage: "trash")
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if viewModel.isEditing {
-                                viewModel.toggleSelection(for: item)
-                            }
-                        }
-                        .overlay {
-                            if viewModel.isEditing {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(
-                                        viewModel.selectedItems.contains(item.id)
-                                        ? Color.blue : Color.clear,
-                                        lineWidth: 2)
-                                Image(systemName: viewModel.selectedItems.contains(item.id)
-                                      ? "checkmark.circle.fill" : "circle")
-                                    .font(.title2)
-                                    .foregroundStyle(.blue)
-                                    .padding(8)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            }
-                        }
-                }
             }
         }
     }

@@ -10,7 +10,8 @@ import SwiftData
 
 /// Okul günü hesaplama motoru
 /// Bir tarihin öğretim günü olup olmadığını kontrol eder
-struct SchoolDayEngine: SchoolDayCalculating {
+@MainActor
+final class SchoolDayEngine: SchoolDayCalculating {
     private let modelContext: ModelContext
     private let weekendRule: WeekendRule
 
