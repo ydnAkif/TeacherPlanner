@@ -23,6 +23,29 @@ final class TeacherPlannerUITests: XCTestCase {
         app.launch()
     }
 
+    private func findNavigationItem(named identifier: String) -> XCUIElement {
+        // 1. Try by identifier (Universal)
+        let query = app.descendants(matching: .any)[identifier]
+        if query.exists { return query }
+        
+        // 2. Try by label/title (macOS Sidebar fallback)
+        // Extract title from "nav_tab_title"
+        var title = identifier.replacingOccurrences(of: "nav_tab_", with: "")
+        title = title.prefix(1).uppercased() + title.dropFirst()
+        
+        let labelQuery = app.descendants(matching: .any)[title]
+        if labelQuery.exists { return labelQuery }
+        
+        // 3. Specific element types
+        let buttonQuery = app.buttons[identifier]
+        if buttonQuery.exists { return buttonQuery }
+        
+        let textQuery = app.staticTexts[identifier]
+        if textQuery.exists { return textQuery }
+        
+        return query
+    }
+
     override func tearDownWithError() throws {
         app = nil
     }
@@ -67,13 +90,13 @@ final class TeacherPlannerUITests: XCTestCase {
     private func completeOnboardingIfNeeded() {
         // Eğer uygulama --seed-data ile açıldıysa zaten ana ekrandayız
         if app.launchArguments.contains("--seed-data") {
-            _ = app.tabBars.firstMatch.waitForExistence(timeout: 20)
+            _ = findNavigationItem(named: "nav_tab_courses").waitForExistence(timeout: 20)
             return
         }
 
         // Değilse (legacy support) onboarding'i UI üzerinden geçmeye çalış
         guard app.staticTexts["onboarding_welcome_text"].waitForExistence(timeout: 5) else {
-            _ = app.tabBars.firstMatch.waitForExistence(timeout: 20)
+            _ = findNavigationItem(named: "nav_tab_courses").waitForExistence(timeout: 20)
             return
         }
         
@@ -86,35 +109,26 @@ final class TeacherPlannerUITests: XCTestCase {
         launchApp(withSeedData: true)
         completeOnboardingIfNeeded()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20), "Tab bar görünmeli")
-
-        let coursesTab = tabBar.buttons["Courses"]
-        XCTAssertTrue(coursesTab.waitForExistence(timeout: 20), "Courses sekmesi tab bar'da olmalı")
+        let coursesTab = findNavigationItem(named: "nav_tab_courses")
+        XCTAssertTrue(coursesTab.waitForExistence(timeout: 20), "Courses sekmesi navigasyonda olmalı")
     }
 
     func testTabBar_ScheduleTabExists() {
         launchApp(withSeedData: true)
         completeOnboardingIfNeeded()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20), "Tab bar görünmeli")
-
-        let scheduleTab = tabBar.buttons["Schedule"]
+        let scheduleTab = findNavigationItem(named: "nav_tab_schedule")
         XCTAssertTrue(
-            scheduleTab.waitForExistence(timeout: 20), "Schedule sekmesi tab bar'da olmalı")
+            scheduleTab.waitForExistence(timeout: 20), "Schedule sekmesi navigasyonda olmalı")
     }
 
     func testTabBar_PlannerTabExists() {
         launchApp(withSeedData: true)
         completeOnboardingIfNeeded()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20), "Tab bar görünmeli")
-
-        let plannerTab = tabBar.buttons["Planner Items"]
+        let plannerTab = findNavigationItem(named: "nav_tab_planner items")
         XCTAssertTrue(
-            plannerTab.waitForExistence(timeout: 20), "Planner Items sekmesi tab bar'da olmalı")
+            plannerTab.waitForExistence(timeout: 20), "Planner Items sekmesi navigasyonda olmalı")
     }
 
     // MARK: - Courses
@@ -124,7 +138,7 @@ final class TeacherPlannerUITests: XCTestCase {
         completeOnboardingIfNeeded()
 
         // Courses sekmesine geç
-        let coursesTab = app.tabBars.firstMatch.buttons["Courses"]
+        let coursesTab = findNavigationItem(named: "nav_tab_courses")
         XCTAssertTrue(coursesTab.waitForExistence(timeout: 20))
         coursesTab.tap()
 
@@ -162,7 +176,7 @@ final class TeacherPlannerUITests: XCTestCase {
         launchApp(withSeedData: true)
         completeOnboardingIfNeeded()
 
-        let plannerTab = app.tabBars.firstMatch.buttons["Planner Items"]
+        let plannerTab = findNavigationItem(named: "nav_tab_planner items")
         XCTAssertTrue(plannerTab.waitForExistence(timeout: 20))
         plannerTab.tap()
 
@@ -178,7 +192,7 @@ final class TeacherPlannerUITests: XCTestCase {
         launchApp(withSeedData: true)
         completeOnboardingIfNeeded()
 
-        let scheduleTab = app.tabBars.firstMatch.buttons["Schedule"]
+        let scheduleTab = findNavigationItem(named: "nav_tab_schedule")
         XCTAssertTrue(scheduleTab.waitForExistence(timeout: 20))
         scheduleTab.tap()
 

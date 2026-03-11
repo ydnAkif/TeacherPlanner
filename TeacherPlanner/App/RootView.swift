@@ -40,6 +40,9 @@ struct RootView: View {
                 List(selection: $router.selectedTab) {
                     ForEach(AppRouter.Tab.allCases, id: \.self) { tab in
                         Label(tab.title, systemImage: tab.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_\(tab.title.lowercased())")
+                            .accessibilityLabel(tab.title)
                             .tag(tab)
                     }
                 }
@@ -53,36 +56,54 @@ struct RootView: View {
                 TodayView()
                     .tabItem {
                         Label(AppRouter.Tab.today.title, systemImage: AppRouter.Tab.today.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_today")
+                            .accessibilityLabel("Today")
                     }
                     .tag(AppRouter.Tab.today)
 
                 WeeklyScheduleView()
                     .tabItem {
                         Label(AppRouter.Tab.schedule.title, systemImage: AppRouter.Tab.schedule.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_schedule")
+                            .accessibilityLabel("Schedule")
                     }
                     .tag(AppRouter.Tab.schedule)
 
                 CourseListView()
                     .tabItem {
                         Label(AppRouter.Tab.courses.title, systemImage: AppRouter.Tab.courses.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_courses")
+                            .accessibilityLabel("Courses")
                     }
                     .tag(AppRouter.Tab.courses)
 
                 PlannerItemListView()
                     .tabItem {
                         Label(AppRouter.Tab.planner.title, systemImage: AppRouter.Tab.planner.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_planner items")
+                            .accessibilityLabel("Planner Items")
                     }
                     .tag(AppRouter.Tab.planner)
 
                 SemesterSettingsView()
                     .tabItem {
                         Label(AppRouter.Tab.semester.title, systemImage: AppRouter.Tab.semester.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_semester")
+                            .accessibilityLabel("Semester")
                     }
                     .tag(AppRouter.Tab.semester)
 
                 SettingsView()
                     .tabItem {
                         Label(AppRouter.Tab.settings.title, systemImage: AppRouter.Tab.settings.icon)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("nav_tab_settings")
+                            .accessibilityLabel("Settings")
                     }
                     .tag(AppRouter.Tab.settings)
             }
