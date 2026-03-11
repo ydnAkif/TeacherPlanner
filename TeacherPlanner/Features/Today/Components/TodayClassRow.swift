@@ -67,7 +67,7 @@ struct TodayClassRow: View {
                         .padding(.vertical, 4)
                         .background(Color.green)
                         .foregroundStyle(.white)
-                        .cornerRadius(4)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
             }
         }

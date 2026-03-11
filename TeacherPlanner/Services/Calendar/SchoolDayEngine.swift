@@ -13,11 +13,9 @@ import SwiftData
 @MainActor
 final class SchoolDayEngine: SchoolDayCalculating {
     private let modelContext: ModelContext
-    private let weekendRule: WeekendRule
 
-    init(modelContext: ModelContext, weekendRule: WeekendRule = .saturdaySunday) {
+    init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        self.weekendRule = weekendRule
     }
 
     /// Verilen tarihin öğretim günü olup olmadığını kontrol eder

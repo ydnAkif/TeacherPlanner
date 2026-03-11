@@ -2,8 +2,6 @@
 //  PlannerItemRow.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 9.03.2026.
-//
 
 import SwiftUI
 
@@ -35,7 +33,6 @@ struct PlannerItemRow: View {
 
                     Spacer()
 
-                    // Öncelik badge
                     priorityBadge
                 }
 
@@ -68,27 +65,34 @@ struct PlannerItemRow: View {
     @ViewBuilder
     private var priorityBadge: some View {
         switch item.priority {
-        case 1:
-            Text("Y")
-                .font(.caption2)
-                .fontWeight(.bold)
-                .padding(.horizontal, 4)
-                .background(Color.red.opacity(0.2))
-                .foregroundStyle(.red)
-                .cornerRadius(2)
-        case 2:
-            Text("O")
-                .font(.caption2)
-                .fontWeight(.bold)
-                .padding(.horizontal, 4)
-                .background(Color.orange.opacity(0.2))
-                .foregroundStyle(.orange)
-                .cornerRadius(2)
-        default:
+        case .high:
+            PriorityBadge(label: Priority.high.badgeLabel, color: .red)
+        case .medium:
+            PriorityBadge(label: Priority.medium.badgeLabel, color: .orange)
+        case .low:
             EmptyView()
         }
     }
 }
+
+// MARK: - PriorityBadge
+
+private struct PriorityBadge: View {
+    let label: String
+    let color: Color
+
+    var body: some View {
+        Text(label)
+            .font(.caption2)
+            .fontWeight(.bold)
+            .padding(.horizontal, 4)
+            .background(color.opacity(0.2))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 2))
+    }
+}
+
+// MARK: - Preview
 
 #Preview {
     List {
@@ -98,7 +102,7 @@ struct PlannerItemRow: View {
                 details: "Asit-baz deneyi için malzemeleri kontrol et",
                 type: .task,
                 dueDate: Date(),
-                priority: 1
+                priority: .high
             ),
             onToggle: {}
         )
@@ -107,7 +111,7 @@ struct PlannerItemRow: View {
             item: PlannerItem(
                 title: "Zümre toplantısı",
                 type: .reminder,
-                priority: 2
+                priority: .medium
             ),
             onToggle: {}
         )
@@ -116,7 +120,7 @@ struct PlannerItemRow: View {
             item: PlannerItem(
                 title: "Tamamlanmış görev",
                 type: .homework,
-                priority: 3,
+                priority: .low,
                 completed: true
             ),
             onToggle: {}

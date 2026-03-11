@@ -236,7 +236,7 @@ extension View {
         self
             .padding(DesignSystem.Spacing.cardPadding)
             .background(DesignSystem.Colors.cardBackground)
-            .cornerRadius(DesignSystem.Radius.large)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.large))
             .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 }

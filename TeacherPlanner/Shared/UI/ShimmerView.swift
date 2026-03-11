@@ -55,7 +55,7 @@ struct SkeletonRect: View {
         Rectangle()
             .fill(SwiftUI.Color.gray.opacity(0.1))
             .frame(width: width, height: height)
-            .cornerRadius(cornerRadius)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .shimmer()
     }
 }

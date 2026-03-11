@@ -68,7 +68,7 @@ struct CourseBlockView: View {
         }
         .padding(6)
         .background(course.color)
-        .cornerRadius(6)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
         .contextMenu {
             Button(role: .destructive) {
                 onDelete()

@@ -2,8 +2,6 @@
 //  EditPlannerItemView.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 9.03.2026.
-//
 
 import SwiftData
 import SwiftUI
@@ -16,7 +14,7 @@ struct EditPlannerItemView: View {
     @State private var title: String = ""
     @State private var details: String = ""
     @State private var type: PlannerItemType = .task
-    @State private var priority: Int = 2
+    @State private var priority: Priority = .medium
     @State private var dueDate: Date = Date()
     @State private var selectedCourse: Course?
     @State private var appError: AppError?
@@ -29,12 +27,13 @@ struct EditPlannerItemView: View {
         self.itemToEdit = item
         self._type = State(initialValue: type)
 
-        if let item = item {
+        if let item {
             _title = State(initialValue: item.title)
             _details = State(initialValue: item.details ?? "")
             _type = State(initialValue: item.type)
             _priority = State(initialValue: item.priority)
             _dueDate = State(initialValue: item.dueDate ?? Date())
+            _selectedCourse = State(initialValue: item.course)
         }
     }
 
@@ -48,15 +47,15 @@ struct EditPlannerItemView: View {
                         .frame(minHeight: 80)
 
                     Picker("Tip", selection: $type) {
-                        ForEach(PlannerItemType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
+                        ForEach(PlannerItemType.allCases, id: \.self) { t in
+                            Label(t.displayName, systemImage: t.systemImage).tag(t)
                         }
                     }
 
                     Picker("Öncelik", selection: $priority) {
-                        Text("Yüksek").tag(1)
-                        Text("Orta").tag(2)
-                        Text("Düşük").tag(3)
+                        ForEach(Priority.allCases, id: \.self) { p in
+                            Text(p.displayName).tag(p)
+                        }
                     }
                 }
 
@@ -76,16 +75,14 @@ struct EditPlannerItemView: View {
             .navigationTitle(itemToEdit == nil ? "Yeni Görev" : "Düzenle")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("İptal") {
-                        dismiss()
-                    }
+                    Button("İptal") { dismiss() }
                 }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Kaydet") {
                         save()
                         dismiss()
                     }
+                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             .errorAlert(error: $appError)
@@ -93,19 +90,20 @@ struct EditPlannerItemView: View {
     }
 
     private func save() {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+        let trimmedDetails = details.trimmingCharacters(in: .whitespaces)
+
         if let item = itemToEdit {
-            // Mevcut item'ı güncelle
-            item.title = title
-            item.details = details.isEmpty ? nil : details
+            item.title = trimmedTitle
+            item.details = trimmedDetails.isEmpty ? nil : trimmedDetails
             item.type = type
             item.priority = priority
             item.dueDate = dueDate
             item.course = selectedCourse
         } else {
-            // Yeni item oluştur
             let newItem = PlannerItem(
-                title: title,
-                details: details.isEmpty ? nil : details,
+                title: trimmedTitle,
+                details: trimmedDetails.isEmpty ? nil : trimmedDetails,
                 type: type,
                 dueDate: dueDate,
                 priority: priority,

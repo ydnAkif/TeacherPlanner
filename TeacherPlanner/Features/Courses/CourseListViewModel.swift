@@ -2,8 +2,6 @@
 //  CourseListViewModel.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 10.03.2026.
-//
 
 import Combine
 import Foundation
@@ -16,25 +14,31 @@ final class CourseListViewModel: ObservableObject {
     @Published var appError: AppError?
 
     // MARK: - Dependencies
-    private var repository: (any CourseRepositoryProtocol)?
+    private var modelContext: ModelContext?
 
     // MARK: - Setup
-    func setup(repository: any CourseRepositoryProtocol) {
-        self.repository = repository
+    func setup(modelContext: ModelContext) {
+        self.modelContext = modelContext
     }
 
     // MARK: - Actions
     func deleteCourse(_ course: Course) {
-        Task {
-            await repository?.delete(course)
+        guard let context = modelContext else { return }
+        context.delete(course)
+        let result = context.saveResult("CourseListViewModel: deleteCourse failed")
+        if case .failure(let error) = result {
+            appError = error
         }
     }
 
     func deleteCourses(at offsets: IndexSet, in courses: [Course]) {
-        Task {
-            for index in offsets {
-                await repository?.delete(courses[index])
-            }
+        guard let context = modelContext else { return }
+        for index in offsets {
+            context.delete(courses[index])
+        }
+        let result = context.saveResult("CourseListViewModel: deleteCourses failed")
+        if case .failure(let error) = result {
+            appError = error
         }
     }
 }

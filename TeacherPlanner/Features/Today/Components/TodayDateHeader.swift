@@ -26,7 +26,7 @@ struct TodayDateHeader: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(AppColors.cardBackground)
-        .cornerRadius(AppSpacing.cornerRadiusLarge)
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cornerRadiusLarge))
         .padding(.horizontal)
     }
 }

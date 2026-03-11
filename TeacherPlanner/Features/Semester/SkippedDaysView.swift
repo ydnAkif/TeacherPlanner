@@ -187,7 +187,7 @@ struct SkippedDayRow: View {
                 .padding(.vertical, 4)
                 .background(typeColor(skippedDay.type).opacity(0.2))
                 .foregroundStyle(typeColor(skippedDay.type))
-                .cornerRadius(4)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
 
             if !skippedDay.reason.isEmpty {
                 Text(skippedDay.reason)

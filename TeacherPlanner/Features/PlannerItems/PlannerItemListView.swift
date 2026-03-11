@@ -2,15 +2,12 @@
 //  PlannerItemListView.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 9.03.2026.
-//
 
 import SwiftData
 import SwiftUI
 
 struct PlannerItemListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.appEnvironment) private var appEnvironment
     @Query(sort: \PlannerItem.createdAt, order: .reverse) private var items: [PlannerItem]
 
     @StateObject private var viewModel = PlannerItemsViewModel()
@@ -32,9 +29,7 @@ struct PlannerItemListView: View {
             .overlay(alignment: .bottomTrailing) { addButton }
             .errorAlert(error: $viewModel.appError)
             .onAppear {
-                if let env = appEnvironment {
-                    viewModel.setup(repository: env.plannerRepository)
-                }
+                viewModel.setup(modelContext: modelContext)
             }
         }
     }
@@ -72,9 +67,10 @@ struct PlannerItemListView: View {
                     }
                 }
             } label: {
-                Image(systemName: viewModel.isEditing
-                    ? "checkmark.circle.fill"
-                    : "line.3.horizontal.decrease.circle")
+                Image(
+                    systemName: viewModel.isEditing
+                        ? "checkmark.circle.fill"
+                        : "line.3.horizontal.decrease.circle")
             }
         }
     }

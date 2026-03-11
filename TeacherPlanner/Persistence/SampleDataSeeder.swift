@@ -223,7 +223,7 @@ struct SampleDataSeeder {
             details: "Asit-baz deneyi için malzemeleri kontrol et",
             type: .task,
             dueDate: calendar.date(byAdding: .day, value: 2, to: Date()),
-            priority: 1,
+            priority: .high,
             course: course1
         )
         context.insert(item1)
@@ -233,7 +233,7 @@ struct SampleDataSeeder {
             details: "Öğrencilere proje konularını dağıt",
             type: .reminder,
             dueDate: calendar.date(byAdding: .day, value: 5, to: Date()),
-            priority: 2,
+            priority: .medium,
             course: course2
         )
         context.insert(item2)
@@ -243,7 +243,7 @@ struct SampleDataSeeder {
             details:
                 "Geçen toplantıda alınan kararlar:\n- Deney sayısı artırılacak\n- Ortak sınav tarihi belirlenecek",
             type: .note,
-            priority: 3
+            priority: .low
         )
         context.insert(item3)
 

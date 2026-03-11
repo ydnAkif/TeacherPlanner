@@ -2,8 +2,6 @@
 //  PlannerItemsViewModel.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 10.03.2026.
-//
 
 import Combine
 import Foundation
@@ -20,17 +18,18 @@ final class PlannerItemsViewModel: ObservableObject {
     @Published var appError: AppError?
 
     // MARK: - Dependencies
-    private var repository: (any PlannerRepositoryProtocol)?
+    private var modelContext: ModelContext?
 
     // MARK: - Setup
-    func setup(repository: any PlannerRepositoryProtocol) {
-        self.repository = repository
+    func setup(modelContext: ModelContext) {
+        self.modelContext = modelContext
     }
 
     // MARK: - Filtering
     func filteredItems(from items: [PlannerItem]) -> [PlannerItem] {
         items.filter { item in
-            let matchesSearch = searchText.isEmpty
+            let matchesSearch =
+                searchText.isEmpty
                 || item.title.localizedCaseInsensitiveContains(searchText)
             let matchesType = selectedType == nil || item.type == selectedType
             return matchesSearch && matchesType
@@ -39,53 +38,47 @@ final class PlannerItemsViewModel: ObservableObject {
 
     // MARK: - Actions
     func toggleCompleted(_ item: PlannerItem) {
-        guard let repo = repository else { return }
-        Task {
-            let result = await repo.toggleCompleted(item)
-            if case .failure(let error) = result {
-                appError = error
-            }
+        guard let context = modelContext else { return }
+        item.completed.toggle()
+        let result = context.saveResult("PlannerItemsViewModel: toggleCompleted failed")
+        if case .failure(let error) = result {
+            appError = error
         }
     }
 
     func deleteItem(_ item: PlannerItem) {
-        guard let repo = repository else { return }
-        Task {
-            let result = await repo.delete(item)
-            if case .failure(let error) = result {
-                appError = error
-            }
+        guard let context = modelContext else { return }
+        context.delete(item)
+        let result = context.saveResult("PlannerItemsViewModel: deleteItem failed")
+        if case .failure(let error) = result {
+            appError = error
         }
     }
 
     func deleteSelected(from items: [PlannerItem]) {
-        guard let repo = repository else { return }
+        guard let context = modelContext else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
-        Task {
-            for item in selected {
-                let result = await repo.delete(item)
-                if case .failure(let error) = result {
-                    appError = error
-                    return
-                }
-            }
-            clearSelection()
+        for item in selected {
+            context.delete(item)
         }
+        let result = context.saveResult("PlannerItemsViewModel: deleteSelected failed")
+        if case .failure(let error) = result {
+            appError = error
+        }
+        clearSelection()
     }
 
     func completeSelected(from items: [PlannerItem]) {
-        guard let repo = repository else { return }
+        guard let context = modelContext else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
-        Task {
-            for item in selected {
-                let result = await repo.toggleCompleted(item)
-                if case .failure(let error) = result {
-                    appError = error
-                    return
-                }
-            }
-            clearSelection()
+        for item in selected {
+            item.completed = true
         }
+        let result = context.saveResult("PlannerItemsViewModel: completeSelected failed")
+        if case .failure(let error) = result {
+            appError = error
+        }
+        clearSelection()
     }
 
     func toggleSelection(for item: PlannerItem) {
@@ -100,7 +93,4 @@ final class PlannerItemsViewModel: ObservableObject {
         selectedItems.removeAll()
         isEditing = false
     }
-
-    // MARK: - Private Helpers
-    private func placeholder() { }
 }

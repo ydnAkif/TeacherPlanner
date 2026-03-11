@@ -12,7 +12,7 @@ struct WeeklyScheduleView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appEnvironment) private var appEnvironment
     @StateObject private var viewModel = WeeklyScheduleViewModel()
-    
+
     @State private var selectedCell: WeeklyCell?
     @State private var selectedPeriod: PeriodDefinition?
     @State private var showingEditSession = false
@@ -38,7 +38,7 @@ struct WeeklyScheduleView: View {
                     emptyState
                 }
             }
-            .navigationTitle("Weekly Schedule")
+            .navigationTitle("Program")
             .task {
                 if let env = appEnvironment {
                     viewModel.setup(modelContext: modelContext, builder: env.weeklyScheduleBuilder)

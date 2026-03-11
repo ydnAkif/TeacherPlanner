@@ -27,7 +27,7 @@ struct TodayPlannerSection: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(AppColors.secondary.opacity(0.2))
-                        .cornerRadius(4)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
                         .padding(.trailing, 16)
                 }
             }
@@ -56,7 +56,7 @@ struct TodayPlannerSection: View {
                 }
                 .padding(.vertical, 8)
                 .background(AppColors.cardBackground)
-                .cornerRadius(AppSpacing.cornerRadiusMedium)
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cornerRadiusMedium))
                 .padding(.horizontal)
             }
         }

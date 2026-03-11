@@ -25,7 +25,7 @@ struct SemesterSettingsView: View {
                     semesterList
                 }
             }
-            .navigationTitle("Semester")
+            .navigationTitle("Dönem")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { showingAddSemester = true }) {
@@ -135,7 +135,7 @@ struct SemesterRow: View {
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(Color.secondary.opacity(0.2))
-                .cornerRadius(4)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
         }
         .padding(.vertical, 4)
     }

@@ -20,7 +20,7 @@ struct PeriodRow: View {
                 .frame(width: 32, height: 32)
                 .background(Color.blue.opacity(0.1))
                 .foregroundStyle(.blue)
-                .cornerRadius(4)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
 
             // Ders bilgisi
             VStack(alignment: .leading, spacing: 4) {

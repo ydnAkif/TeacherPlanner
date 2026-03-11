@@ -22,17 +22,17 @@ struct TodayView: View {
                     contentView(viewModel: viewModel)
                 }
             }
-            .navigationTitle("Today")
+            .navigationTitle("Bugün")
             .refreshable {
                 await viewModel.loadData()
             }
             .task {
                 if let env = appEnvironment {
                     await viewModel.setup(
+                        modelContext: modelContext,
                         schoolDayEngine: env.schoolDayEngine,
                         nextClassCalculator: env.nextClassCalculator,
-                        todayScheduleProvider: env.todayScheduleProvider,
-                        plannerRepository: env.plannerRepository
+                        todayScheduleProvider: env.todayScheduleProvider
                     )
                 }
             }
@@ -107,7 +107,7 @@ struct TodayView: View {
                 ProgressView("Yükleniyor...")
                     .padding()
                     .background(Color.gray.opacity(0.2))
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
     }

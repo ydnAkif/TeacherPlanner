@@ -23,7 +23,7 @@ struct QuickAddBar: View {
                 .padding(.vertical, 10)
                 .background(Color.blue.opacity(0.1))
                 .foregroundStyle(.blue)
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
             Button(action: { showingAddNote = true }) {
@@ -35,7 +35,7 @@ struct QuickAddBar: View {
                 .padding(.vertical, 10)
                 .background(Color.orange.opacity(0.1))
                 .foregroundStyle(.orange)
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding(.horizontal)

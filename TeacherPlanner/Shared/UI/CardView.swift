@@ -20,7 +20,7 @@ struct CardView<Content: View>: View {
         content
             .padding()
             .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
             .onTapGesture {
                 onTap?()

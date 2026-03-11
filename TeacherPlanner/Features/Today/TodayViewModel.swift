@@ -1,3 +1,8 @@
+//
+//  TodayViewModel.swift
+//  TeacherPlanner
+//
+
 import Combine
 import Foundation
 import SwiftData
@@ -6,7 +11,7 @@ import SwiftUI
 /// Today ekranı için ViewModel
 @MainActor
 final class TodayViewModel: ObservableObject {
-    private var plannerRepository: (any PlannerRepositoryProtocol)?
+    private var modelContext: ModelContext?
     private var schoolDayEngine: (any SchoolDayCalculating)?
     private var nextClassCalculator: (any NextClassProviding)?
     private var todayScheduleProvider: (any TodayScheduleProviding)?
@@ -24,17 +29,17 @@ final class TodayViewModel: ObservableObject {
     init() {}
 
     func setup(
+        modelContext: ModelContext,
         schoolDayEngine: any SchoolDayCalculating,
         nextClassCalculator: any NextClassProviding,
-        todayScheduleProvider: any TodayScheduleProviding,
-        plannerRepository: any PlannerRepositoryProtocol
+        todayScheduleProvider: any TodayScheduleProviding
     ) async {
         guard !isInitialized else { return }
 
+        self.modelContext = modelContext
         self.schoolDayEngine = schoolDayEngine
         self.nextClassCalculator = nextClassCalculator
         self.todayScheduleProvider = todayScheduleProvider
-        self.plannerRepository = plannerRepository
 
         self.isInitialized = true
         await loadData()
@@ -43,9 +48,10 @@ final class TodayViewModel: ObservableObject {
     /// Verileri yükle
     func loadData() async {
         guard isInitialized,
-              let engine = schoolDayEngine,
-              let nextCalc = nextClassCalculator,
-              let scheduleProvider = todayScheduleProvider else { return }
+            let engine = schoolDayEngine,
+            let nextCalc = nextClassCalculator,
+            let scheduleProvider = todayScheduleProvider
+        else { return }
 
         isLoading = true
         appError = nil
@@ -59,7 +65,7 @@ final class TodayViewModel: ObservableObject {
             todayClasses = []
             currentClass = nil
             isLoading = false
-            await loadTodayPlannerItems()
+            loadTodayPlannerItems()
             return
         }
 
@@ -75,33 +81,51 @@ final class TodayViewModel: ObservableObject {
 
         nextClassResult = await nextCalc.nextClass(from: today, semester: semester)
 
-        await loadTodayPlannerItems()
+        loadTodayPlannerItems()
         isLoading = false
     }
 
-    /// Bugünkü planner itemları yükle
-    private func loadTodayPlannerItems() async {
-        guard let repo = plannerRepository else { return }
+    /// Bugünkü planner itemları yükle (ModelContext üzerinden doğrudan fetch)
+    private func loadTodayPlannerItems() {
+        guard let context = modelContext else { return }
 
-        let result = await repo.fetchTodayItems()
-        todayPlannerItems = result.get(or: [])
-        if case .failure(let error) = result {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+
+        let descriptor = FetchDescriptor<PlannerItem>(
+            predicate: #Predicate { item in
+                if let dueDate = item.dueDate {
+                    return dueDate >= today && dueDate < tomorrow
+                } else {
+                    return false
+                }
+            },
+            sortBy: [
+                SortDescriptor(\.createdAt)
+            ]
+        )
+
+        let result = context.fetchResult(
+            descriptor, failureMessage: "TodayViewModel: loadTodayPlannerItems failed")
+        switch result {
+        case .success(let items):
+            todayPlannerItems = items
+        case .failure(let error):
             appError = error
         }
     }
 
     /// Tamamlanma durumunu toggle et
     func toggleCompleted(_ item: PlannerItem) {
-        guard let repo = plannerRepository else { return }
-
-        Task {
-            let result = await repo.toggleCompleted(item)
-            if case .failure(let error) = result {
-                appError = error
-                return
-            }
-            await loadTodayPlannerItems()
+        guard let context = modelContext else { return }
+        item.completed.toggle()
+        let result = context.saveResult("TodayViewModel: toggleCompleted failed")
+        if case .failure(let error) = result {
+            appError = error
+            return
         }
+        loadTodayPlannerItems()
     }
 
     /// Tarih gösterimi

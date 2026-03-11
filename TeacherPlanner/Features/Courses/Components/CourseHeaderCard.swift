@@ -57,7 +57,7 @@ struct CourseHeaderCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(course.color.opacity(0.1))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

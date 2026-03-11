@@ -3,11 +3,10 @@ import SwiftUI
 
 /// Shared configuration constants across the application
 enum Constants {
-    /// App Group Identifier for sharing data with Widgets and intents
-    static let appGroupIdentifier = "group.com.ydnakif.TeacherPlanner.shared"
 
     struct App {
-        static let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0"
+        static let version =
+            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0"
         static let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 

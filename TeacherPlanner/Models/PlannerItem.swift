@@ -8,6 +8,8 @@
 import Foundation
 import SwiftData
 
+// MARK: - PlannerItemType
+
 /// Planner item tipleri (note, homework, task vb.)
 enum PlannerItemType: String, Codable, CaseIterable {
     case note = "note"
@@ -19,38 +21,61 @@ enum PlannerItemType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .note:
-            return "Not"
-        case .homework:
-            return "Ödev"
-        case .reminder:
-            return "Hatırlatma"
-        case .exam:
-            return "Sınav"
-        case .material:
-            return "Materyal"
-        case .task:
-            return "Görev"
+        case .note: return "Not"
+        case .homework: return "Ödev"
+        case .reminder: return "Hatırlatma"
+        case .exam: return "Sınav"
+        case .material: return "Materyal"
+        case .task: return "Görev"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .note:
-            return "note.text"
-        case .homework:
-            return "pencil.tip"
-        case .reminder:
-            return "bell"
-        case .exam:
-            return "checkmark.seal"
-        case .material:
-            return "folder"
-        case .task:
-            return "checklist"
+        case .note: return "note.text"
+        case .homework: return "pencil.tip"
+        case .reminder: return "bell"
+        case .exam: return "checkmark.seal"
+        case .material: return "folder"
+        case .task: return "checklist"
         }
     }
 }
+
+// MARK: - Priority
+
+/// Görev önceliği — Int raw value SwiftData migration'ını korur
+enum Priority: Int, Codable, CaseIterable {
+    case high = 1
+    case medium = 2
+    case low = 3
+
+    var displayName: String {
+        switch self {
+        case .high: return "Yüksek"
+        case .medium: return "Orta"
+        case .low: return "Düşük"
+        }
+    }
+
+    var color: String {
+        switch self {
+        case .high: return "red"
+        case .medium: return "orange"
+        case .low: return "blue"
+        }
+    }
+
+    var badgeLabel: String {
+        switch self {
+        case .high: return "Y"
+        case .medium: return "O"
+        case .low: return "D"
+        }
+    }
+}
+
+// MARK: - PlannerItem
 
 /// Task / Note / Hatırlatma birleşik modeli
 @Model
@@ -60,7 +85,7 @@ final class PlannerItem {
     var details: String?
     var type: PlannerItemType
     var dueDate: Date?
-    var priority: Int  // 1-3 arası (1: yüksek, 2: orta, 3: düşük)
+    var priority: Priority
     var completed: Bool
     var createdAt: Date
 
@@ -73,7 +98,7 @@ final class PlannerItem {
         details: String? = nil,
         type: PlannerItemType = .note,
         dueDate: Date? = nil,
-        priority: Int = 2,
+        priority: Priority = .medium,
         completed: Bool = false,
         createdAt: Date = Date(),
         course: Course? = nil
@@ -89,19 +114,14 @@ final class PlannerItem {
         self.course = course
     }
 
-    /// Öncelik gösterimi
+    /// Öncelik gösterimi (geriye dönük uyumluluk için)
     var priorityDisplay: String {
-        switch priority {
-        case 1: return "Yüksek"
-        case 2: return "Orta"
-        case 3: return "Düşük"
-        default: return "-"
-        }
+        priority.displayName
     }
 
     /// Vadesi geçmiş mi?
     var isOverdue: Bool {
-        guard let dueDate = dueDate else { return false }
+        guard let dueDate else { return false }
         return !completed && Date() > dueDate
     }
 }

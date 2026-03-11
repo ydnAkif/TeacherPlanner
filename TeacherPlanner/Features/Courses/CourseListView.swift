@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct CourseListView: View {
-    @Environment(\.appEnvironment) private var appEnvironment
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Course.title) private var courses: [Course]
 
     @StateObject private var viewModel = CourseListViewModel()
@@ -37,9 +37,7 @@ struct CourseListView: View {
             }
             .errorAlert(error: $viewModel.appError)
             .onAppear {
-                if let env = appEnvironment {
-                    viewModel.setup(repository: env.courseRepository)
-                }
+                viewModel.setup(modelContext: modelContext)
             }
         }
     }
@@ -73,4 +71,3 @@ struct CourseListView: View {
 #Preview {
     CourseListView()
 }
-

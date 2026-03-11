@@ -13,11 +13,8 @@ final class AppEnvironment {
     let nextClassCalculator: any NextClassProviding
     let todayScheduleProvider: any TodayScheduleProviding
     let weeklyScheduleBuilder: any WeeklyScheduleBuilding
-    let plannerRepository: any PlannerRepositoryProtocol
-    let courseRepository: any CourseRepositoryProtocol
-    let semesterRepository: any SemesterRepositoryProtocol
-    let notificationScheduler: any NotificationScheduling
     let router: AppRouter
+    let notificationScheduler: any NotificationScheduling
 
     // MARK: - Init
     init(modelContext: ModelContext) {
@@ -25,19 +22,17 @@ final class AppEnvironment {
         self.schoolDayEngine = engine
         self.notificationManager = NotificationManager()
 
-        self.nextClassCalculator = NextClassCalculator(
+        let nextClass = NextClassCalculator(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
+        self.nextClassCalculator = nextClass
 
-        self.todayScheduleProvider = TodayScheduleProvider(
+        let todaySchedule = TodayScheduleProvider(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
-
-        self.courseRepository = CourseRepository(modelContext: modelContext)
-        self.semesterRepository = SemesterRepository(modelContext: modelContext)
-        self.plannerRepository = PlannerRepository(modelContext: modelContext)
+        self.todayScheduleProvider = todaySchedule
 
         let sched = NotificationScheduler(
             modelContext: modelContext,

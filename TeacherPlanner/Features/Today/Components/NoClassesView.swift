@@ -24,7 +24,7 @@ struct NoClassesView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
         .background(AppColors.cardBackground)
-        .cornerRadius(AppSpacing.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cornerRadiusMedium))
         .padding(.horizontal)
     }
 }
