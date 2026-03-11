@@ -10,16 +10,15 @@ final class PlannerTaskUseCase: PlannerTaskUseCaseProtocol {
         self.repository = repository
     }
     
-    func toggleCompleted(_ item: PlannerItem) async throws {
-        try await repository.toggleCompleted(item)
-        // Burada bildirimleri güncelleme gibi ek mantıklar gelebilir
+    func toggleCompleted(_ item: PlannerItem) async -> Result<Void, AppError> {
+        await repository.toggleCompleted(item)
     }
     
-    func deleteItem(_ item: PlannerItem) async throws {
-        try await repository.delete(item)
+    func deleteItem(_ item: PlannerItem) async -> Result<Void, AppError> {
+        await repository.delete(item)
     }
     
-    func fetchTodayItems() async throws -> [PlannerItem] {
-        try await repository.fetchTodayItems()
+    func fetchTodayItems() async -> Result<[PlannerItem], AppError> {
+        await repository.fetchTodayItems()
     }
 }

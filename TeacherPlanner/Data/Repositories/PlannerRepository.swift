@@ -4,11 +4,11 @@ import SwiftData
 /// PlannerItem verilerine erişim soyutlaması
 @MainActor
 protocol PlannerRepositoryProtocol {
-    func fetchTodayItems() async throws -> [PlannerItem]
-    func fetchAllItems(searchText: String, type: PlannerItemType?) async throws -> [PlannerItem]
-    func save(_ item: PlannerItem) async throws
-    func delete(_ item: PlannerItem) async throws
-    func toggleCompleted(_ item: PlannerItem) async throws
+    func fetchTodayItems() async -> Result<[PlannerItem], AppError>
+    func fetchAllItems(searchText: String, type: PlannerItemType?) async -> Result<[PlannerItem], AppError>
+    func save(_ item: PlannerItem) async -> Result<Void, AppError>
+    func delete(_ item: PlannerItem) async -> Result<Void, AppError>
+    func toggleCompleted(_ item: PlannerItem) async -> Result<Void, AppError>
 }
 
 @MainActor
@@ -19,7 +19,7 @@ final class PlannerRepository: PlannerRepositoryProtocol {
         self.modelContext = modelContext
     }
     
-    func fetchTodayItems() async throws -> [PlannerItem] {
+    func fetchTodayItems() async -> Result<[PlannerItem], AppError> {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
@@ -36,37 +36,45 @@ final class PlannerRepository: PlannerRepositoryProtocol {
             },
             sortBy: [SortDescriptor(\.priority), SortDescriptor(\.createdAt)]
         )
-        
-        return try modelContext.fetch(descriptor)
+
+        return modelContext.fetchResult(
+            descriptor,
+            failureMessage: "PlannerRepository: fetchTodayItems failed"
+        )
     }
     
-    func fetchAllItems(searchText: String = "", type: PlannerItemType? = nil) async throws -> [PlannerItem] {
+    func fetchAllItems(searchText: String = "", type: PlannerItemType? = nil) async -> Result<[PlannerItem], AppError> {
         // More complex filtering would go here if not using @Query
         let descriptor = FetchDescriptor<PlannerItem>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        let items = try modelContext.fetch(descriptor)
-        
-        return items.filter { item in
+        let result = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "PlannerRepository: fetchAllItems failed"
+        )
+
+        return result.map { items in
+            items.filter { item in
             let matchesSearch = searchText.isEmpty
                 || item.title.localizedCaseInsensitiveContains(searchText)
-            let matchesType = type == nil || item.type == type
-            return matchesSearch && matchesType
+                let matchesType = type == nil || item.type == type
+                return matchesSearch && matchesType
+            }
         }
     }
     
-    func save(_ item: PlannerItem) async throws {
+    func save(_ item: PlannerItem) async -> Result<Void, AppError> {
         modelContext.insert(item)
-        try modelContext.save()
+        return modelContext.saveResult("PlannerRepository: save failed")
     }
     
-    func delete(_ item: PlannerItem) async throws {
+    func delete(_ item: PlannerItem) async -> Result<Void, AppError> {
         modelContext.delete(item)
-        try modelContext.save()
+        return modelContext.saveResult("PlannerRepository: delete failed")
     }
     
-    func toggleCompleted(_ item: PlannerItem) async throws {
+    func toggleCompleted(_ item: PlannerItem) async -> Result<Void, AppError> {
         item.completed.toggle()
-        try modelContext.save()
+        return modelContext.saveResult("PlannerRepository: toggleCompleted failed")
     }
 }

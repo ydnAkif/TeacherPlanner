@@ -64,9 +64,9 @@ protocol NotificationScheduling {
 /// Planner item işlemleri için Use Case
 @MainActor
 protocol PlannerTaskUseCaseProtocol {
-    func toggleCompleted(_ item: PlannerItem) async throws
-    func deleteItem(_ item: PlannerItem) async throws
-    func fetchTodayItems() async throws -> [PlannerItem]
+    func toggleCompleted(_ item: PlannerItem) async -> Result<Void, AppError>
+    func deleteItem(_ item: PlannerItem) async -> Result<Void, AppError>
+    func fetchTodayItems() async -> Result<[PlannerItem], AppError>
 }
 
 /// Bildirim işlemleri için Use Case

@@ -7,8 +7,8 @@ enum Constants {
     static let appGroupIdentifier = "group.com.ydnakif.TeacherPlanner.shared"
 
     struct App {
-        static let version = "0.3.0"
-        static let build = "2026.03.09"
+        static let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0"
+        static let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 
     struct Notification {

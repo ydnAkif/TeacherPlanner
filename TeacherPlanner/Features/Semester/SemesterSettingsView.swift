@@ -80,11 +80,16 @@ struct SemesterSettingsView: View {
     }
 
     private func deleteSemester(at indexSet: IndexSet) {
-        for index in indexSet {
-            let semester = semesters.sorted { $0.startDate > $1.startDate }[index]
-            modelContext.delete(semester)
+        do {
+            for index in indexSet {
+                let semester = semesters.sorted { $0.startDate > $1.startDate }[index]
+                modelContext.delete(semester)
+            }
+            try modelContext.save()
+            Logger.info("Semester deleted successfully")
+        } catch {
+            Logger.error(error, message: "Failed to delete semester")
         }
-        try? modelContext.save()
     }
 }
 

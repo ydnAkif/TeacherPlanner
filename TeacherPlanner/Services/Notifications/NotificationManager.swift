@@ -9,7 +9,8 @@ import Foundation
 import UserNotifications
 
 /// Bildirim yöneticisi
-actor NotificationManager {
+@MainActor
+final class NotificationManager {
     static let shared = NotificationManager()
 
     private let center: UNUserNotificationCenter
@@ -24,7 +25,7 @@ actor NotificationManager {
             let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
             return granted
         } catch {
-            print("Notification permission error: \(error)")
+            Logger.error(error, message: "Notification permission error")
             return false
         }
     }
@@ -69,7 +70,7 @@ actor NotificationManager {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to schedule notification: \(error)")
+            Logger.error(error, message: "Failed to schedule notification")
         }
     }
 

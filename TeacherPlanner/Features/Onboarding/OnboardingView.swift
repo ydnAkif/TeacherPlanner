@@ -233,15 +233,11 @@ struct OnboardingView: View {
         )
 
         Task {
-            do {
-                if let env = appEnvironment {
-                    // MEBPreset için hala context gerekebilir, repository'ye taşınabilir ama şimdilik burada kalsın
-                    MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
-                    try await env.semesterRepository.save(semester)
-                    showingPeriodSetup = true
-                }
-            } catch {
-                print("Error saving semester: \(error)")
+            if let env = appEnvironment {
+                // MEBPreset için hala context gerekebilir, repository'ye taşınabilir ama şimdilik burada kalsın
+                MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
+                await env.semesterRepository.save(semester)
+                showingPeriodSetup = true
             }
         }
     }

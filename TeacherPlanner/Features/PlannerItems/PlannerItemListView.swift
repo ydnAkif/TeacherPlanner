@@ -14,6 +14,7 @@ struct PlannerItemListView: View {
     @Query(sort: \PlannerItem.createdAt, order: .reverse) private var items: [PlannerItem]
 
     @StateObject private var viewModel = PlannerItemsViewModel()
+    @State private var showingAddItem = false
 
     var body: some View {
         NavigationStack {
@@ -27,8 +28,8 @@ struct PlannerItemListView: View {
             .navigationTitle("Görevler")
             .searchable(text: $viewModel.searchText, prompt: "Ara...")
             .toolbar { toolbar }
-            .sheet(isPresented: .constant(false)) { EditPlannerItemView() }  // placeholder
-            .overlay(alignment: .bottom) { addButton }
+            .sheet(isPresented: $showingAddItem) { EditPlannerItemView() }
+            .overlay(alignment: .bottomTrailing) { addButton }
             .errorAlert(error: $viewModel.appError)
             .onAppear {
                 if let env = appEnvironment {
@@ -85,14 +86,22 @@ struct PlannerItemListView: View {
             title: "Henüz Görev Yok",
             message: "Yeni görev veya not eklemek için + butonuna tıklayın",
             actionLabel: "Görev Ekle",
-            action: { /* sheet */ }
+            action: { showingAddItem = true }
         )
     }
 
     // MARK: - Add Button
     private var addButton: some View {
-        // Handled via toolbar sheet in a real scenario; this is a placeholder
-        EmptyView()
+        Button(action: { showingAddItem = true }) {
+            Image(systemName: "plus")
+                .font(.title2.weight(.semibold))
+                .foregroundColor(.white)
+                .padding()
+                .background(Color.blue)
+                .clipShape(Circle())
+                .shadow(radius: 4, y: 2)
+        }
+        .padding()
     }
 }
 

@@ -15,7 +15,7 @@ protocol WidgetScheduleProviding {
 final class WidgetAppGroupCache {
     private let fileURL: URL
 
-    init(appGroupIdentifier: String = "group.com.teacherplanner.shared") {
+    init(appGroupIdentifier: String = "group.com.ydnakif.TeacherPlanner.shared") {
         let container = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier)
         self.fileURL =
@@ -25,13 +25,22 @@ final class WidgetAppGroupCache {
     }
 
     func readSummary() -> SharedWidgetData? {
-        guard let data = try? Data(contentsOf: fileURL) else { return nil }
-        return try? JSONDecoder().decode(SharedWidgetData.self, from: data)
+        do {
+            let data = try Data(contentsOf: fileURL)
+            return try JSONDecoder().decode(SharedWidgetData.self, from: data)
+        } catch {
+            Logger.error(error, message: "WidgetAppGroupCache: readSummary failed")
+            return nil
+        }
     }
 
     func writeSummary(_ summary: SharedWidgetData) {
-        guard let data = try? JSONEncoder().encode(summary) else { return }
-        try? data.write(to: fileURL, options: .atomic)
+        do {
+            let data = try JSONEncoder().encode(summary)
+            try data.write(to: fileURL, options: .atomic)
+        } catch {
+            Logger.error(error, message: "WidgetAppGroupCache: writeSummary failed")
+        }
     }
 }
 
@@ -68,7 +77,7 @@ final class WidgetDataProvider: WidgetScheduleProviding {
                 SkippedDay.self
             ])
             let sharedStoreURL = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: "group.com.teacherplanner.shared"
+                forSecurityApplicationGroupIdentifier: "group.com.ydnakif.TeacherPlanner.shared"
             )?.appendingPathComponent("TeacherPlanner.sqlite")
             
             let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("TeacherPlanner.sqlite")
@@ -80,7 +89,7 @@ final class WidgetDataProvider: WidgetScheduleProviding {
             )
             return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
-            print("WidgetDataProvider sharedContainer error: \(error)")
+            Logger.error(error, message: "WidgetDataProvider sharedContainer error")
             return nil
         }
     }()

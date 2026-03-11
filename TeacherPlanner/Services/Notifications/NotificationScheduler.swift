@@ -35,11 +35,11 @@ final class NotificationScheduler: NotificationScheduling {
 
     /// Bugünün bildirimlerini zamanla
     func scheduleTodayNotifications() async {
-        guard let semester = await schoolDayEngine.getActiveSemester() else { return }
+        guard let semester = schoolDayEngine.getActiveSemester() else { return }
 
         // Bugün öğretim günü mü?
         let today = Date()
-        let isInstructionalDay = await schoolDayEngine.isInstructionalDay(today, semester: semester)
+        let isInstructionalDay = schoolDayEngine.isInstructionalDay(today, semester: semester)
 
         guard isInstructionalDay else {
             // Ders yoksa tüm bildirimleri iptal et
@@ -57,7 +57,12 @@ final class NotificationScheduler: NotificationScheduling {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        guard let sessions = try? modelContext.fetch(descriptor) else { return }
+        let fetchResult = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "NotificationScheduler: today sessions fetch failed"
+        )
+        let sessions = fetchResult.get(or: [])
+        guard !sessions.isEmpty else { return }
 
         // Bildirimleri zamanla
         let sessionsWithPeriods = sessions.compactMap {
@@ -71,7 +76,7 @@ final class NotificationScheduler: NotificationScheduling {
 
     /// Gelecek 7 günün bildirimlerini zamanla
     func scheduleWeekNotifications() async {
-        guard let semester = await schoolDayEngine.getActiveSemester() else { return }
+        guard let semester = schoolDayEngine.getActiveSemester() else { return }
 
         let calendar = Calendar.current
         let today = Date()
@@ -81,7 +86,7 @@ final class NotificationScheduler: NotificationScheduling {
                 continue
             }
 
-            let isInstructionalDay = await schoolDayEngine.isInstructionalDay(
+            let isInstructionalDay = schoolDayEngine.isInstructionalDay(
                 date, semester: semester)
             guard isInstructionalDay else { continue }
 
@@ -92,7 +97,12 @@ final class NotificationScheduler: NotificationScheduling {
                 sortBy: [SortDescriptor(\.periodOrder)]
             )
 
-            guard let sessions = try? modelContext.fetch(descriptor) else { continue }
+            let fetchResult = modelContext.fetchResult(
+                descriptor,
+                failureMessage: "NotificationScheduler: week sessions fetch failed"
+            )
+            let sessions = fetchResult.get(or: [])
+            guard !sessions.isEmpty else { continue }
 
             let sessionsWithPeriods = sessions.compactMap {
                 session -> (ClassSession, PeriodDefinition)? in

@@ -4,11 +4,14 @@ import SwiftData
 /// Semester verilerine erişim soyutlaması
 @MainActor
 protocol SemesterRepositoryProtocol {
-    func fetchActiveSemester() async throws -> Semester?
-    func fetchAll() async throws -> [Semester]
-    func save(_ semester: Semester) async throws
-    func delete(_ semester: Semester) async throws
-    func setActive(_ semester: Semester) async throws
+    func fetchActiveSemester() async -> Result<Semester?, AppError>
+    func fetchAll() async -> Result<[Semester], AppError>
+    @discardableResult
+    func save(_ semester: Semester) async -> Result<Void, AppError>
+    @discardableResult
+    func delete(_ semester: Semester) async -> Result<Void, AppError>
+    @discardableResult
+    func setActive(_ semester: Semester) async -> Result<Void, AppError>
 }
 
 @MainActor
@@ -19,35 +22,54 @@ final class SemesterRepository: SemesterRepositoryProtocol {
         self.modelContext = modelContext
     }
     
-    func fetchActiveSemester() async throws -> Semester? {
+    func fetchActiveSemester() async -> Result<Semester?, AppError> {
         let descriptor = FetchDescriptor<Semester>(
             predicate: #Predicate { $0.isActive }
         )
-        return try modelContext.fetch(descriptor).first
+
+        let result = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "SemesterRepository: fetchActiveSemester failed"
+        )
+
+        return result.map { $0.first }
     }
     
-    func fetchAll() async throws -> [Semester] {
+    func fetchAll() async -> Result<[Semester], AppError> {
         let descriptor = FetchDescriptor<Semester>(
             sortBy: [SortDescriptor(\Semester.startDate, order: .reverse)]
         )
-        return try modelContext.fetch(descriptor)
+
+        return modelContext.fetchResult(
+            descriptor,
+            failureMessage: "SemesterRepository: fetchAll failed"
+        )
     }
     
-    func save(_ semester: Semester) async throws {
+    @discardableResult
+    func save(_ semester: Semester) async -> Result<Void, AppError> {
         modelContext.insert(semester)
-        try modelContext.save()
+        return modelContext.saveResult("SemesterRepository: save failed")
     }
     
-    func delete(_ semester: Semester) async throws {
+    @discardableResult
+    func delete(_ semester: Semester) async -> Result<Void, AppError> {
         modelContext.delete(semester)
-        try modelContext.save()
+        return modelContext.saveResult("SemesterRepository: delete failed")
     }
     
-    func setActive(_ semester: Semester) async throws {
-        let semesters = try await fetchAll()
-        for s in semesters {
-            s.isActive = (s.id == semester.id)
+    @discardableResult
+    func setActive(_ semester: Semester) async -> Result<Void, AppError> {
+        let allResult = await fetchAll()
+
+        switch allResult {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let semesters):
+            for s in semesters {
+                s.isActive = (s.id == semester.id)
+            }
+            return modelContext.saveResult("SemesterRepository: setActive failed")
         }
-        try modelContext.save()
     }
 }

@@ -42,7 +42,7 @@ final class SchoolDayEngine: SchoolDayCalculating {
 
         // 2. Hafta sonu mu?
         let weekday = calendar.component(.weekday, from: date)
-        if weekendRule.isSkipped(weekday: weekday) {
+        if semester.weekendRule.isSkipped(weekday: weekday) {
             return false
         }
 

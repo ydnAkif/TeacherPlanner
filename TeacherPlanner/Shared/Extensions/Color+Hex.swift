@@ -22,4 +22,38 @@ extension Color {
 
         self.init(red: r, green: g, blue: b)
     }
+
+    /// Color'dan hex string'e çevir
+    var hexString: String? {
+        #if canImport(UIKit)
+        let uiColor = UIColor(self)
+        guard let components = uiColor.cgColor.components else { return nil }
+        #elseif canImport(AppKit)
+        let nsColor = NSColor(self)
+        guard let components = nsColor.cgColor.components else { return nil }
+        #else
+        return nil
+        #endif
+
+        let r = components.count >= 1 ? components[0] : 0
+        let g = components.count >= 2 ? components[1] : 0
+        let b = components.count >= 3 ? components[2] : 0
+        let a = components.count >= 4 ? components[3] : 1
+
+        // Alpha 1 değilse, rgba formatında döndür
+        if a < 1.0 {
+            return String(
+                format: "%02lX%02lX%02lX%02lX",
+                lround(Double(r) * 255),
+                lround(Double(g) * 255),
+                lround(Double(b) * 255),
+                lround(Double(a) * 255))
+        }
+
+        return String(
+            format: "%02lX%02lX%02lX",
+            lround(Double(r) * 255),
+            lround(Double(g) * 255),
+            lround(Double(b) * 255))
+    }
 }

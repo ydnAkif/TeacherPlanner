@@ -48,9 +48,19 @@ extension Date {
         DateFormatter.shortTime.string(from: self)
     }
     
+    /// Alias: time string in short style
+    var timeString: String {
+        shortTimeString
+    }
+    
     /// Formats the date using the medium date style
     var mediumDateString: String {
         DateFormatter.mediumDate.string(from: self)
+    }
+    
+    /// Alias: short date string (uses medium style)
+    var shortDateString: String {
+        mediumDateString
     }
     
     /// Formats the date using the long date style
@@ -76,5 +86,18 @@ extension Date {
     /// Checks if the date falls on the same day as another date.
     func isSameDay(as otherDate: Date) -> Bool {
         Calendar.current.isDate(self, inSameDayAs: otherDate)
+    }
+    
+    /// Formats the date using a given date style (no time component).
+    func formatted(_ style: DateFormatter.Style) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = style
+        formatter.timeStyle = .none
+        return formatter.string(from: self)
+    }
+    
+    /// Number of days from given date to this date (self - date).
+    func days(from date: Date) -> Int {
+        Calendar.current.daysBetween(date, and: self)
     }
 }

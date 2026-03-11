@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Today ekranı için ViewModel
 @MainActor
-class TodayViewModel: ObservableObject {
+final class TodayViewModel: ObservableObject {
     private var modelContext: ModelContext?
     private var taskUseCase: (any PlannerTaskUseCaseProtocol)?
 
@@ -71,11 +71,10 @@ class TodayViewModel: ObservableObject {
     private func loadTodayPlannerItems() async {
         guard let useCase = taskUseCase else { return }
         
-        do {
-            todayPlannerItems = try await useCase.fetchTodayItems()
-        } catch {
-            appError = AppError.from(error: error)
-            todayPlannerItems = []
+        let result = await useCase.fetchTodayItems()
+        todayPlannerItems = result.get(or: [])
+        if case .failure(let error) = result {
+            appError = error
         }
     }
 
@@ -84,12 +83,12 @@ class TodayViewModel: ObservableObject {
         guard let useCase = taskUseCase else { return }
         
         Task {
-            do {
-                try await useCase.toggleCompleted(item)
-                await loadTodayPlannerItems()
-            } catch {
-                appError = AppError.from(error: error)
+            let result = await useCase.toggleCompleted(item)
+            if case .failure(let error) = result {
+                appError = error
+                return
             }
+            await loadTodayPlannerItems()
         }
     }
 

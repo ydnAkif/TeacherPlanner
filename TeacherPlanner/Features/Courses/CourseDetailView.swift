@@ -18,6 +18,7 @@ struct CourseDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var showingAddSession = false
     @State private var isLoading = true
+    @State private var appError: AppError?
 
     var body: some View {
         ScrollView {
@@ -75,6 +76,7 @@ struct CourseDetailView: View {
         } message: {
             Text("'\(course.title)' dersini silmek istediğinize emin misiniz?")
         }
+        .errorAlert(error: $appError)
         .task {
             isLoading = false
         }
@@ -208,7 +210,9 @@ struct CourseDetailView: View {
 
     private func deleteCourse() {
         modelContext.delete(course)
-        try? modelContext.save()
+        modelContext
+            .saveResult("CourseDetailView: course delete failed")
+            .onFailure { appError = $0 }
         dismiss()
     }
 }

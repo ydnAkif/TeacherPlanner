@@ -101,9 +101,6 @@ struct TodayView: View {
             }
             .padding(.vertical)
         }
-        .refreshable {
-            await viewModel.loadData()
-        }
         .overlay {
             if viewModel.isLoading {
                 ProgressView("Yükleniyor...")

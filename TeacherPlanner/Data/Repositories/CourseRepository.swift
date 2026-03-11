@@ -4,9 +4,11 @@ import SwiftData
 /// Course verilerine erişim soyutlaması
 @MainActor
 protocol CourseRepositoryProtocol {
-    func fetchAll() async throws -> [Course]
-    func save(_ course: Course) async throws
-    func delete(_ course: Course) async throws
+    func fetchAll() async -> Result<[Course], AppError>
+    @discardableResult
+    func save(_ course: Course) async -> Result<Void, AppError>
+    @discardableResult
+    func delete(_ course: Course) async -> Result<Void, AppError>
 }
 
 @MainActor
@@ -17,20 +19,26 @@ final class CourseRepository: CourseRepositoryProtocol {
         self.modelContext = modelContext
     }
     
-    func fetchAll() async throws -> [Course] {
+    func fetchAll() async -> Result<[Course], AppError> {
         let descriptor = FetchDescriptor<Course>(
             sortBy: [SortDescriptor(\Course.title)]
         )
-        return try modelContext.fetch(descriptor)
+
+        return modelContext.fetchResult(
+            descriptor,
+            failureMessage: "CourseRepository: fetchAll failed"
+        )
     }
     
-    func save(_ course: Course) async throws {
+    @discardableResult
+    func save(_ course: Course) async -> Result<Void, AppError> {
         modelContext.insert(course)
-        try modelContext.save()
+        return modelContext.saveResult("CourseRepository: save failed")
     }
     
-    func delete(_ course: Course) async throws {
+    @discardableResult
+    func delete(_ course: Course) async -> Result<Void, AppError> {
         modelContext.delete(course)
-        try modelContext.save()
+        return modelContext.saveResult("CourseRepository: delete failed")
     }
 }

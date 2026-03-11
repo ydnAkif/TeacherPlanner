@@ -19,6 +19,7 @@ struct EditPlannerItemView: View {
     @State private var priority: Int = 2
     @State private var dueDate: Date = Date()
     @State private var selectedCourse: Course?
+    @State private var appError: AppError?
 
     @Query(sort: \Course.title) private var courses: [Course]
 
@@ -87,6 +88,7 @@ struct EditPlannerItemView: View {
                     }
                 }
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -112,7 +114,9 @@ struct EditPlannerItemView: View {
             modelContext.insert(newItem)
         }
 
-        try? modelContext.save()
+        modelContext
+            .saveResult("EditPlannerItemView: save failed")
+            .onFailure { appError = $0 }
     }
 }
 

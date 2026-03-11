@@ -68,10 +68,13 @@ struct ModelContainerFactory {
             let shmURL = url.deletingPathExtension().appendingPathExtension("sqlite-shm")
             let walURL = url.deletingPathExtension().appendingPathExtension("sqlite-wal")
             
-            try? FileManager.default.removeItem(at: url)
-            try? FileManager.default.removeItem(at: shmURL)
-            try? FileManager.default.removeItem(at: walURL)
+            do { try FileManager.default.removeItem(at: url) }
+            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
+            do { try FileManager.default.removeItem(at: shmURL) }
+            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
+            do { try FileManager.default.removeItem(at: walURL) }
+            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
         }
-        print("ModelContainerFactory: Tüm veriler temizlendi.")
+        Logger.info("ModelContainerFactory: Tüm veriler temizlendi.")
     }
 }

@@ -20,6 +20,7 @@ struct EditPeriodView: View {
         Calendar.current.date(from: DateComponents(hour: 8, minute: 40)) ?? Date()
     @State private var endTime: Date =
         Calendar.current.date(from: DateComponents(hour: 9, minute: 20)) ?? Date()
+    @State private var appError: AppError?
 
     init(period: PeriodDefinition? = nil) {
         self.periodToEdit = period
@@ -78,6 +79,7 @@ struct EditPeriodView: View {
                     .disabled(title.isEmpty || startTime >= endTime)
                 }
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -97,7 +99,14 @@ struct EditPeriodView: View {
             let descriptor = FetchDescriptor<PeriodDefinition>(
                 sortBy: [SortDescriptor(\.orderIndex, order: .reverse)]
             )
-            let periods = (try? modelContext.fetch(descriptor)) ?? []
+            let fetchResult = modelContext.fetchResult(
+                descriptor,
+                failureMessage: "EditPeriodView: periods fetch failed"
+            )
+            if case .failure(let error) = fetchResult {
+                appError = error
+            }
+            let periods = fetchResult.get(or: [])
             let nextOrder = (periods.first?.orderIndex ?? 0) + 1
 
             let newPeriod = PeriodDefinition(
@@ -109,7 +118,9 @@ struct EditPeriodView: View {
             modelContext.insert(newPeriod)
         }
 
-        try? modelContext.save()
+        modelContext
+            .saveResult("EditPeriodView: save failed")
+            .onFailure { appError = $0 }
     }
 }
 

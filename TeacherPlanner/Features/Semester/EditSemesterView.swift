@@ -20,6 +20,7 @@ struct EditSemesterView: View {
     @State private var weekendRule: WeekendRule = .saturdaySunday
     @State private var applyMEBPreset: Bool = true
     @State private var showingSuccessMessage = false
+    @State private var appError: AppError?
 
     init(semester: Semester? = nil) {
         self.semesterToEdit = semester
@@ -123,6 +124,7 @@ struct EditSemesterView: View {
             } message: {
                 Text("'\(name)' dönemi başarıyla kaydedildi.")
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -150,10 +152,15 @@ struct EditSemesterView: View {
             let activeDescriptor = FetchDescriptor<Semester>(
                 predicate: #Predicate { $0.isActive }
             )
-            if let activeSemesters = try? modelContext.fetch(activeDescriptor) {
-                for activeSemester in activeSemesters {
-                    activeSemester.isActive = false
-                }
+            let fetchResult = modelContext.fetchResult(
+                activeDescriptor,
+                failureMessage: "EditSemesterView: active semester fetch failed"
+            )
+            if case .failure(let error) = fetchResult {
+                appError = error
+            }
+            for activeSemester in fetchResult.get(or: []) {
+                activeSemester.isActive = false
             }
 
             let newSemester = Semester(
@@ -171,7 +178,9 @@ struct EditSemesterView: View {
             }
         }
 
-        try? modelContext.save()
+        modelContext
+            .saveResult("EditSemesterView: save failed")
+            .onFailure { appError = $0 }
         showingSuccessMessage = true
     }
 }

@@ -15,7 +15,7 @@ struct TeacherPlannerApp: App {
 
     init() {
         // TEMPORARY: Verileri temizlemek için alttaki satırı bir kez çalıştırıp sonra yorum satırı yapın
-        ModelContainerFactory.eraseAllData()
+        // ModelContainerFactory.eraseAllData()
 
         do {
             container = try ModelContainerFactory.create()

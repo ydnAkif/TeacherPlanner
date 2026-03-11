@@ -81,7 +81,12 @@ class NextClassCalculator: NextClassProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        guard let sessions = try? modelContext.fetch(descriptor) else { return nil }
+        let fetchResult = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "NextClassCalculator: today sessions fetch failed"
+        )
+        let sessions = fetchResult.get(or: [])
+        guard !sessions.isEmpty else { return nil }
 
         for session in sessions {
             guard let period = session.period else { continue }
@@ -115,12 +120,11 @@ class NextClassCalculator: NextClassProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        guard let sessions = try? modelContext.fetch(descriptor),
-            let firstSession = sessions.first,
-            let period = firstSession.period
-        else {
-            return nil
-        }
+        let sessions = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "NextClassCalculator: first class fetch failed"
+        ).get(or: [])
+        guard let firstSession = sessions.first, let period = firstSession.period else { return nil }
 
         return NextClassResult(
             session: firstSession,
@@ -136,7 +140,9 @@ class NextClassCalculator: NextClassProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return modelContext
+            .fetchResult(descriptor, failureMessage: "NextClassCalculator: weekday sessions fetch failed")
+            .get(or: [])
     }
 }
 

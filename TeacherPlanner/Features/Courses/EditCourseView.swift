@@ -22,6 +22,7 @@ struct EditCourseView: View {
 
     @State private var showingColorPicker = false
     @State private var showingSymbolPicker = false
+    @State private var appError: AppError?
 
     // Renk seçenekleri
     private let colorOptions: [(hex: String, name: String)] = [
@@ -105,7 +106,6 @@ struct EditCourseView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Kaydet") {
                         save()
-                        dismiss()
                     }
                     .disabled(title.isEmpty)
                 }
@@ -122,6 +122,7 @@ struct EditCourseView: View {
                     symbols: symbolOptions
                 )
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -141,7 +142,13 @@ struct EditCourseView: View {
             modelContext.insert(newCourse)
         }
 
-        try? modelContext.save()
+        modelContext
+            .saveResult("EditCourseView: save failed")
+            .onSuccess { _ in
+                Logger.info("Course saved successfully: \(title)")
+                dismiss()
+            }
+            .onFailure { appError = $0 }
     }
 }
 

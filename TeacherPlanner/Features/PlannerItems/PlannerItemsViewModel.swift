@@ -41,10 +41,9 @@ final class PlannerItemsViewModel: ObservableObject {
     func toggleCompleted(_ item: PlannerItem) {
         guard let useCase = useCase else { return }
         Task {
-            do {
-                try await useCase.toggleCompleted(item)
-            } catch {
-                appError = AppError.from(error: error)
+            let result = await useCase.toggleCompleted(item)
+            if case .failure(let error) = result {
+                appError = error
             }
         }
     }
@@ -52,10 +51,9 @@ final class PlannerItemsViewModel: ObservableObject {
     func deleteItem(_ item: PlannerItem) {
         guard let useCase = useCase else { return }
         Task {
-            do {
-                try await useCase.deleteItem(item)
-            } catch {
-                appError = AppError.from(error: error)
+            let result = await useCase.deleteItem(item)
+            if case .failure(let error) = result {
+                appError = error
             }
         }
     }
@@ -64,14 +62,14 @@ final class PlannerItemsViewModel: ObservableObject {
         guard let useCase = useCase else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
         Task {
-            do {
-                for item in selected {
-                    try await useCase.deleteItem(item)
+            for item in selected {
+                let result = await useCase.deleteItem(item)
+                if case .failure(let error) = result {
+                    appError = error
+                    return
                 }
-                clearSelection()
-            } catch {
-                appError = AppError.from(error: error)
             }
+            clearSelection()
         }
     }
 
@@ -79,14 +77,14 @@ final class PlannerItemsViewModel: ObservableObject {
         guard let useCase = useCase else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
         Task {
-            do {
-                for item in selected {
-                    try await useCase.toggleCompleted(item)
+            for item in selected {
+                let result = await useCase.toggleCompleted(item)
+                if case .failure(let error) = result {
+                    appError = error
+                    return
                 }
-                clearSelection()
-            } catch {
-                appError = AppError.from(error: error)
             }
+            clearSelection()
         }
     }
 

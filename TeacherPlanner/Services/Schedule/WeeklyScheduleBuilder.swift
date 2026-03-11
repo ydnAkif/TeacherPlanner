@@ -22,9 +22,9 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
     func buildWeeklyGrid() -> WeeklyScheduleGrid {
         let descriptor = FetchDescriptor<ClassSession>()
 
-        guard let sessions = try? modelContext.fetch(descriptor) else {
-            return WeeklyScheduleGrid()
-        }
+        let sessions = modelContext
+            .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: sessions fetch failed")
+            .get(or: [])
 
         var grid = WeeklyScheduleGrid()
 
@@ -43,7 +43,9 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return modelContext
+            .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: classes fetch failed")
+            .get(or: [])
     }
 
     /// Tüm periodları sıralı getirir
@@ -52,7 +54,9 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
             sortBy: [SortDescriptor(\.orderIndex)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return modelContext
+            .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: periods fetch failed")
+            .get(or: [])
     }
 
     /// Haftalık görünüm için veri oluşturur
@@ -83,7 +87,10 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
         let descriptor = FetchDescriptor<ClassSession>(
             predicate: #Predicate { $0.weekday == weekday && $0.periodOrder == periodOrder }
         )
-        return (try? modelContext.fetch(descriptor))?.first
+        return modelContext
+            .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: session fetch failed")
+            .get(or: [])
+            .first
     }
 }
 

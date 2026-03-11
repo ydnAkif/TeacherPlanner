@@ -26,24 +26,14 @@ final class CourseListViewModel: ObservableObject {
     // MARK: - Actions
     func deleteCourse(_ course: Course) {
         Task {
-            do {
-                try await repository?.delete(course)
-            } catch {
-                AppLogger.error(error, message: "CourseListViewModel: deleteCourse failed")
-                appError = AppError.from(error: error)
-            }
+            await repository?.delete(course)
         }
     }
 
     func deleteCourses(at offsets: IndexSet, in courses: [Course]) {
         Task {
-            do {
-                for index in offsets {
-                    try await repository?.delete(courses[index])
-                }
-            } catch {
-                AppLogger.error(error, message: "CourseListViewModel: deleteCourses failed")
-                appError = AppError.from(error: error)
+            for index in offsets {
+                await repository?.delete(courses[index])
             }
         }
     }

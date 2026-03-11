@@ -108,10 +108,15 @@ struct PeriodSetupView: View {
     }
 
     private func savePeriods() {
-        for period in periods {
-            modelContext.insert(period)
+        do {
+            for period in periods {
+                modelContext.insert(period)
+            }
+            try modelContext.save()
+            Logger.info("Periods saved successfully")
+        } catch {
+            Logger.error(error, message: "Failed to save periods")
         }
-        try? modelContext.save()
     }
 }
 

@@ -21,6 +21,7 @@ struct EditClassSessionView: View {
     @State private var notes: String = ""
     @State private var showingSuccessMessage = false
     @State private var conflictError: String?
+    @State private var appError: AppError?
 
     @Query(sort: \Course.title) private var courses: [Course]
 
@@ -93,6 +94,7 @@ struct EditClassSessionView: View {
             } message: {
                 Text(conflictError ?? "")
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -105,16 +107,22 @@ struct EditClassSessionView: View {
         if let period = period, selectedCourse != nil {
             let descriptor = FetchDescriptor<ClassSession>()
 
-            if let allSessions = try? modelContext.fetch(descriptor) {
-                for existingSession in allSessions {
-                    if existingSession.weekday == weekday
-                        && existingSession.periodOrder == period.orderIndex
-                        && existingSession.id != sessionToEdit?.id
-                    {
-                        conflictError =
-                            "Bu saatte zaten \(existingSession.course?.title ?? "bir ders") dersi var"
-                        return
-                    }
+            let fetchResult = modelContext.fetchResult(
+                descriptor,
+                failureMessage: "EditClassSessionView: conflict fetch failed"
+            )
+            if case .failure(let error) = fetchResult {
+                appError = error
+            }
+
+            for existingSession in fetchResult.get(or: []) {
+                if existingSession.weekday == weekday
+                    && existingSession.periodOrder == period.orderIndex
+                    && existingSession.id != sessionToEdit?.id
+                {
+                    conflictError =
+                        "Bu saatte zaten \(existingSession.course?.title ?? "bir ders") dersi var"
+                    return
                 }
             }
         }
@@ -134,7 +142,9 @@ struct EditClassSessionView: View {
             )
             modelContext.insert(newSession)
         }
-        try? modelContext.save()
+        modelContext
+            .saveResult("EditClassSessionView: save failed")
+            .onFailure { appError = $0 }
         showingSuccessMessage = true
     }
 }

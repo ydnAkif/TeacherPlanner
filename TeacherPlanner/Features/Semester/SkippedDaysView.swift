@@ -18,6 +18,7 @@ struct SkippedDaysView: View {
     @State private var selectedDate: Date = Date()
     @State private var selectedType: SkipType = .manual
     @State private var reason: String = ""
+    @State private var appError: AppError?
 
     var body: some View {
         NavigationStack {
@@ -71,6 +72,7 @@ struct SkippedDaysView: View {
                     }
                 }
             }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -90,13 +92,17 @@ struct SkippedDaysView: View {
         )
         skippedDay.semester = semester
         modelContext.insert(skippedDay)
-        try? modelContext.save()
+        modelContext
+            .saveResult("SkippedDaysView: add skipped day save failed")
+            .onFailure { appError = $0 }
         reason = ""
     }
 
     private func deleteSkippedDay(_ skippedDay: SkippedDay) {
         modelContext.delete(skippedDay)
-        try? modelContext.save()
+        modelContext
+            .saveResult("SkippedDaysView: delete skipped day save failed")
+            .onFailure { appError = $0 }
     }
 
     private func addSkippedDayIfNotExists(date: Date, type: SkipType, reason: String) {
@@ -124,7 +130,9 @@ struct SkippedDaysView: View {
             }
             date = calendar.date(byAdding: .day, value: 1, to: date) ?? date
         }
-        try? modelContext.save()
+        modelContext
+            .saveResult("SkippedDaysView: add weekends save failed")
+            .onFailure { appError = $0 }
     }
 
     private func addAllMondays() {
@@ -138,7 +146,9 @@ struct SkippedDaysView: View {
             }
             date = calendar.date(byAdding: .day, value: 1, to: date) ?? date
         }
-        try? modelContext.save()
+        modelContext
+            .saveResult("SkippedDaysView: add all mondays save failed")
+            .onFailure { appError = $0 }
     }
 }
 

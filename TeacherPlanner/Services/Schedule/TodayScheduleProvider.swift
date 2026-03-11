@@ -44,7 +44,9 @@ class TodayScheduleProvider: TodayScheduleProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return modelContext
+            .fetchResult(descriptor, failureMessage: "TodayScheduleProvider: today sessions fetch failed")
+            .get(or: [])
     }
 
     /// Bugünkü dersleri period bilgisiyle birlikte getirir
