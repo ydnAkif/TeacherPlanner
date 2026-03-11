@@ -17,14 +17,14 @@ final class PlannerItemsViewModel: ObservableObject {
     @Published var selectedType: PlannerItemType?
     @Published var isEditing: Bool = false
     @Published var selectedItems: Set<UUID> = []
-    @Published var errorMessage: String?
+    @Published var appError: AppError?
 
     // MARK: - Dependencies
-    private var modelContext: ModelContext?
+    private var useCase: (any PlannerTaskUseCaseProtocol)?
 
     // MARK: - Setup
-    func setup(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    func setup(useCase: any PlannerTaskUseCaseProtocol) {
+        self.useCase = useCase
     }
 
     // MARK: - Filtering
@@ -39,31 +39,55 @@ final class PlannerItemsViewModel: ObservableObject {
 
     // MARK: - Actions
     func toggleCompleted(_ item: PlannerItem) {
-        item.completed.toggle()
-        save()
+        guard let useCase = useCase else { return }
+        Task {
+            do {
+                try await useCase.toggleCompleted(item)
+            } catch {
+                appError = AppError.from(error: error)
+            }
+        }
     }
 
     func deleteItem(_ item: PlannerItem) {
-        guard let context = modelContext else { return }
-        context.delete(item)
-        save()
+        guard let useCase = useCase else { return }
+        Task {
+            do {
+                try await useCase.deleteItem(item)
+            } catch {
+                appError = AppError.from(error: error)
+            }
+        }
     }
 
     func deleteSelected(from items: [PlannerItem]) {
-        guard let context = modelContext else { return }
-        items.filter { selectedItems.contains($0.id) }.forEach {
-            context.delete($0)
+        guard let useCase = useCase else { return }
+        let selected = items.filter { selectedItems.contains($0.id) }
+        Task {
+            do {
+                for item in selected {
+                    try await useCase.deleteItem(item)
+                }
+                clearSelection()
+            } catch {
+                appError = AppError.from(error: error)
+            }
         }
-        save()
-        clearSelection()
     }
 
     func completeSelected(from items: [PlannerItem]) {
-        items.filter { selectedItems.contains($0.id) }.forEach {
-            $0.completed = true
+        guard let useCase = useCase else { return }
+        let selected = items.filter { selectedItems.contains($0.id) }
+        Task {
+            do {
+                for item in selected {
+                    try await useCase.toggleCompleted(item)
+                }
+                clearSelection()
+            } catch {
+                appError = AppError.from(error: error)
+            }
         }
-        save()
-        clearSelection()
     }
 
     func toggleSelection(for item: PlannerItem) {
@@ -80,13 +104,5 @@ final class PlannerItemsViewModel: ObservableObject {
     }
 
     // MARK: - Private Helpers
-    private func save() {
-        guard let context = modelContext else { return }
-        do {
-            try context.save()
-        } catch {
-            AppLogger.error(error, message: "PlannerItemsViewModel: save failed")
-            errorMessage = "Görev kaydedilemedi. Lütfen tekrar deneyin."
-        }
-    }
+    private func placeholder() { }
 }

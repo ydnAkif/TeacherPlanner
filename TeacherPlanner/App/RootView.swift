@@ -10,14 +10,17 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appEnvironment) private var appEnvironment
     @Query private var semesters: [Semester]
-
-    @State private var selectedTab: Int = 0
 
     var body: some View {
         Group {
             if hasActiveSemester {
-                mainContent
+                if let env = appEnvironment {
+                    mainContent(env)
+                } else {
+                    ProgressView()
+                }
             } else {
                 OnboardingView()
             }
@@ -29,87 +32,78 @@ struct RootView: View {
     }
 
     @ViewBuilder
-    var mainContent: some View {
+    private func mainContent(_ env: AppEnvironment) -> some View {
+        @Bindable var router = env.router
+        
         #if os(macOS)
             NavigationSplitView {
-                List(selection: $selectedTab) {
-                    Label("Today", systemImage: "sun.max")
-                        .tag(0)
-                    Label("Schedule", systemImage: "calendar")
-                        .tag(1)
-                    Label("Courses", systemImage: "book")
-                        .tag(2)
-                    Label("Planner Items", systemImage: "checklist")
-                        .tag(3)
-                    Label("Semester", systemImage: "graduationcap")
-                        .tag(4)
-                    Label("Settings", systemImage: "gearshape")
-                        .tag(5)
+                List(selection: $router.selectedTab) {
+                    ForEach(AppRouter.Tab.allCases, id: \.self) { tab in
+                        Label(tab.title, systemImage: tab.icon)
+                            .tag(tab)
+                    }
                 }
                 .navigationTitle("TeacherPlanner")
                 .listStyle(.sidebar)
             } detail: {
-                detailView
+                detailView(router.selectedTab)
             }
         #else
-            TabView(selection: $selectedTab) {
+            TabView(selection: $router.selectedTab) {
                 TodayView()
                     .tabItem {
-                        Label("Today", systemImage: "sun.max")
+                        Label(AppRouter.Tab.today.title, systemImage: AppRouter.Tab.today.icon)
                     }
-                    .tag(0)
+                    .tag(AppRouter.Tab.today)
 
                 WeeklyScheduleView()
                     .tabItem {
-                        Label("Schedule", systemImage: "calendar")
+                        Label(AppRouter.Tab.schedule.title, systemImage: AppRouter.Tab.schedule.icon)
                     }
-                    .tag(1)
+                    .tag(AppRouter.Tab.schedule)
 
                 CourseListView()
                     .tabItem {
-                        Label("Courses", systemImage: "book")
+                        Label(AppRouter.Tab.courses.title, systemImage: AppRouter.Tab.courses.icon)
                     }
-                    .tag(2)
+                    .tag(AppRouter.Tab.courses)
 
                 PlannerItemListView()
                     .tabItem {
-                        Label("Planner Items", systemImage: "checklist")
+                        Label(AppRouter.Tab.planner.title, systemImage: AppRouter.Tab.planner.icon)
                     }
-                    .tag(3)
+                    .tag(AppRouter.Tab.planner)
 
                 SemesterSettingsView()
                     .tabItem {
-                        Label("Semester", systemImage: "graduationcap")
+                        Label(AppRouter.Tab.semester.title, systemImage: AppRouter.Tab.semester.icon)
                     }
-                    .tag(4)
+                    .tag(AppRouter.Tab.semester)
 
                 SettingsView()
                     .tabItem {
-                        Label("Settings", systemImage: "gearshape")
+                        Label(AppRouter.Tab.settings.title, systemImage: AppRouter.Tab.settings.icon)
                     }
-                    .tag(5)
+                    .tag(AppRouter.Tab.settings)
             }
         #endif
     }
 
     @ViewBuilder
-    var detailView: some View {
+    private func detailView(_ selectedTab: AppRouter.Tab) -> some View {
         switch selectedTab {
-        case 0:
+        case .today:
             TodayView()
-        case 1:
+        case .schedule:
             WeeklyScheduleView()
-        case 2:
+        case .courses:
             CourseListView()
-        case 3:
+        case .planner:
             PlannerItemListView()
-        case 4:
+        case .semester:
             SemesterSettingsView()
-        case 5:
+        case .settings:
             SettingsView()
-        default:
-            Text("Select a section")
-                .foregroundStyle(.secondary)
         }
     }
 }

@@ -79,8 +79,8 @@ actor NotificationManager {
     }
 
     /// Tüm bildirimleri iptal et
-    func cancelAllNotifications() {
-        center.removeAllPendingNotificationRequests()
+    func cancelAllNotifications() async {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
     /// Günlük ders bildirimlerini zamanla

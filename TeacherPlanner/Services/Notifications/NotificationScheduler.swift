@@ -9,19 +9,28 @@ import Foundation
 import SwiftData
 
 /// Bildirim zamanlayıcı servis
-actor NotificationScheduler {
+@MainActor
+final class NotificationScheduler: NotificationScheduling {
     private let modelContext: ModelContext
-    private let schoolDayEngine: SchoolDayEngine
+    private let schoolDayEngine: any SchoolDayCalculating
     private let notificationManager: NotificationManager
 
     init(
         modelContext: ModelContext,
-        schoolDayEngine: SchoolDayEngine,
+        schoolDayEngine: any SchoolDayCalculating,
         notificationManager: NotificationManager
     ) {
         self.modelContext = modelContext
         self.schoolDayEngine = schoolDayEngine
         self.notificationManager = notificationManager
+    }
+
+    func cancelAllNotifications() async {
+        await notificationManager.cancelAllNotifications()
+    }
+
+    func requestPermission() async -> Bool {
+        await notificationManager.requestPermission()
     }
 
     /// Bugünün bildirimlerini zamanla

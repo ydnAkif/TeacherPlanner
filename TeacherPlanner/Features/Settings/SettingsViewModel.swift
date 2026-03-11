@@ -17,31 +17,34 @@ final class SettingsViewModel: ObservableObject {
     @Published var notificationPermissionGranted = false
     @Published var showingResetAlert = false
     @Published var showingResetSuccess = false
-    @Published var errorMessage: String?
+    @Published var appError: AppError?
 
     // MARK: - Dependencies
     private var modelContext: ModelContext?
+    private var notificationUseCase: (any NotificationUseCaseProtocol)?
+    private var scheduler: (any NotificationScheduling)?
 
     // MARK: - Setup
-    func setup(modelContext: ModelContext) {
+    func setup(
+        modelContext: ModelContext,
+        notificationUseCase: any NotificationUseCaseProtocol,
+        scheduler: any NotificationScheduling
+    ) {
         self.modelContext = modelContext
+        self.notificationUseCase = notificationUseCase
+        self.scheduler = scheduler
     }
 
     // MARK: - Notification Permission
     func checkNotificationPermission() async {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        notificationPermissionGranted = settings.authorizationStatus == .authorized
+        guard let scheduler = scheduler else { return }
+        notificationPermissionGranted = await scheduler.requestPermission()
     }
 
     func requestNotificationPermission() {
         Task {
-            let center = UNUserNotificationCenter.current()
-            do {
-                let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
-                notificationPermissionGranted = granted
-            } catch {
-                AppLogger.error(error, message: "SettingsViewModel: notification permission failed")
-                errorMessage = "Bildirim izni alınamadı."
+            if let scheduler = scheduler {
+                notificationPermissionGranted = await scheduler.requestPermission()
             }
         }
     }
@@ -65,7 +68,7 @@ final class SettingsViewModel: ObservableObject {
             }
         } catch {
             AppLogger.error(error, message: "SettingsViewModel: data reset failed")
-            errorMessage = "Veriler silinemedi: \(error.localizedDescription)"
+            appError = AppError.from(error: error)
         }
     }
 }

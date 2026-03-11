@@ -24,6 +24,22 @@ extension DateFormatter {
         formatter.dateStyle = .long
         return formatter
     }()
+    
+    /// Reusable formatter for full dates (e.g., "Monday, March 11, 2026")
+    static let fullDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.locale = Locale(identifier: "tr_TR")
+        return formatter
+    }()
+    
+    /// ISO 8601 style date formatter (yyyy-MM-dd)
+    static let isoDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "tr_TR")
+        return formatter
+    }()
 }
 
 extension Date {
@@ -40,6 +56,16 @@ extension Date {
     /// Formats the date using the long date style
     var longDateString: String {
         DateFormatter.longDate.string(from: self)
+    }
+    
+    /// Formats the date using the full date style
+    var fullDateString: String {
+        DateFormatter.fullDate.string(from: self)
+    }
+    
+    /// Formats the date using the ISO date style (yyyy-MM-dd)
+    var isoDateString: String {
+        DateFormatter.isoDate.string(from: self)
     }
     
     /// Returns a new date with the specified hour and minute, using the current calendar.

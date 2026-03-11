@@ -9,9 +9,10 @@ import Foundation
 import SwiftData
 
 /// Sıradaki dersi hesaplayan servis
-actor NextClassCalculator: NextClassProviding {
+@MainActor
+class NextClassCalculator: NextClassProviding {
     private let modelContext: ModelContext
-    private let schoolDayEngine: SchoolDayEngine
+    private let schoolDayEngine: SchoolDayCalculating
 
     init(modelContext: ModelContext, schoolDayEngine: SchoolDayEngine) {
         self.modelContext = modelContext
@@ -25,7 +26,7 @@ actor NextClassCalculator: NextClassProviding {
     /// - Returns: Sıradaki ClassSession ve Period bilgisi
     func nextClass(from date: Date = Date(), semester: Semester? = nil) async -> NextClassResult? {
         let calendar = Calendar.current
-        let targetSemester = await schoolDayEngine.getActiveSemester()
+        let targetSemester = schoolDayEngine.getActiveSemester()
         let semesterToUse = semester ?? targetSemester
         guard let semester = semesterToUse else { return nil }
 
@@ -34,7 +35,7 @@ actor NextClassCalculator: NextClassProviding {
         let today = calendar.startOfDay(for: date)
 
         // Bugünün derslerini kontrol et
-        if await schoolDayEngine.isInstructionalDay(today, semester: semester) {
+        if schoolDayEngine.isInstructionalDay(today, semester: semester) {
             if let todayClass = await findNextClassToday(after: date, semester: semester) {
                 return todayClass
             }
@@ -43,7 +44,7 @@ actor NextClassCalculator: NextClassProviding {
         } else {
             // Bugün ders yok, ilk öğretim gününü bul
             guard
-                let nextDay = await schoolDayEngine.nextInstructionalDay(
+                let nextDay = schoolDayEngine.nextInstructionalDay(
                     after: date, semester: semester)
             else {
                 return nil
@@ -53,7 +54,7 @@ actor NextClassCalculator: NextClassProviding {
 
         // Gelecek öğretim günlerini tara
         for _ in 0..<30 {
-            if await schoolDayEngine.isInstructionalDay(currentDate, semester: semester) {
+            if schoolDayEngine.isInstructionalDay(currentDate, semester: semester) {
                 if let classSession = await findFirstClass(on: currentDate, semester: semester) {
                     return classSession
                 }

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appEnvironment) private var appEnvironment
     @StateObject private var viewModel = TodayViewModel()
 
     var body: some View {
@@ -26,8 +27,15 @@ struct TodayView: View {
                 await viewModel.loadData()
             }
             .task {
-                await viewModel.setup(modelContext: modelContext)
+                if let env = appEnvironment {
+                    await viewModel.setup(
+                        modelContext: modelContext,
+                        overviewUseCase: env.todayOverviewUseCase,
+                        taskUseCase: env.plannerTaskUseCase
+                    )
+                }
             }
+            .errorAlert(error: $viewModel.appError)
         }
     }
 

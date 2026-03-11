@@ -14,11 +14,10 @@ import SwiftUI
 @MainActor
 class TodayViewModel: ObservableObject {
     private var modelContext: ModelContext?
+    private var taskUseCase: (any PlannerTaskUseCaseProtocol)?
 
-    // Services
-    private var schoolDayEngine: SchoolDayEngine?
-    private var nextClassCalculator: NextClassCalculator?
-    private var todayScheduleProvider: TodayScheduleProvider?
+    // Use Case
+    private var overviewUseCase: (any TodayOverviewUseCaseProtocol)?
 
     // State
     @Published var activeSemester: Semester?
@@ -28,31 +27,21 @@ class TodayViewModel: ObservableObject {
     @Published var currentClass: (session: ClassSession, period: PeriodDefinition)?
     @Published var isLoading: Bool = false
     @Published var isInitialized: Bool = false
-    @Published var errorMessage: String?
+    @Published var appError: AppError?
 
-    // Tarih formatlayıcılar
-    private let dateformatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        formatter.locale = Locale(identifier: "tr_TR")
-        return formatter
-    }()
 
     init() {}
     
-    func setup(modelContext: ModelContext) async {
+    func setup(
+        modelContext: ModelContext,
+        overviewUseCase: any TodayOverviewUseCaseProtocol,
+        taskUseCase: any PlannerTaskUseCaseProtocol
+    ) async {
         guard !isInitialized else { return }
         
         self.modelContext = modelContext
-        self.schoolDayEngine = SchoolDayEngine(modelContext: modelContext)
-        self.nextClassCalculator = NextClassCalculator(
-            modelContext: modelContext,
-            schoolDayEngine: self.schoolDayEngine!
-        )
-        self.todayScheduleProvider = TodayScheduleProvider(
-            modelContext: modelContext,
-            schoolDayEngine: self.schoolDayEngine!
-        )
+        self.overviewUseCase = overviewUseCase
+        self.taskUseCase = taskUseCase
         
         self.isInitialized = true
         await loadData()
@@ -60,40 +49,17 @@ class TodayViewModel: ObservableObject {
 
     /// Verileri yükle
     func loadData() async {
-        guard isInitialized,
-              let schoolDayEngine = schoolDayEngine,
-              let todayScheduleProvider = todayScheduleProvider,
-              let nextClassCalculator = nextClassCalculator else { return }
+        guard isInitialized, let useCase = overviewUseCase else { return }
               
         isLoading = true
-        errorMessage = nil
+        appError = nil
 
-        // Aktif dönemi bul
-        activeSemester = schoolDayEngine.getActiveSemester()
-
-        guard let semester = activeSemester else {
-            errorMessage = "Aktif dönem bulunamadı"
-            isLoading = false
-            return
-        }
-
-        // Bugün öğretim günü mü?
-        let today = Date()
-        let isInstructionalDay = schoolDayEngine.isInstructionalDay(today, semester: semester)
-
-        if isInstructionalDay {
-            // Bugünkü dersleri al
-            todayClasses = await todayScheduleProvider.todayClassesWithPeriods(semester: semester)
-
-            // Şu anki dersi bul
-            currentClass = await todayScheduleProvider.currentClass(semester: semester)
-        } else {
-            todayClasses = []
-            currentClass = nil
-        }
-
-        // Sıradaki dersi bul
-        nextClassResult = await nextClassCalculator.nextClass(from: today, semester: semester)
+        let data = await useCase.execute()
+        
+        activeSemester = data.activeSemester
+        nextClassResult = data.nextClass
+        todayClasses = data.todayClasses
+        currentClass = data.currentClass
 
         // Bugünkü planner itemları al
         await loadTodayPlannerItems()
@@ -103,45 +69,33 @@ class TodayViewModel: ObservableObject {
 
     /// Bugünkü planner itemları yükle
     private func loadTodayPlannerItems() async {
-        guard let context = modelContext else { return }
+        guard let useCase = taskUseCase else { return }
         
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-
-        let descriptor = FetchDescriptor<PlannerItem>(
-            predicate: #Predicate { item in
-                if let dueDate = item.dueDate {
-                    return dueDate >= today && dueDate < tomorrow
-                } else {
-                    return false
-                }
-            },
-            sortBy: [SortDescriptor(\.priority), SortDescriptor(\.createdAt)]
-        )
-
         do {
-            todayPlannerItems = try context.fetch(descriptor)
+            todayPlannerItems = try await useCase.fetchTodayItems()
         } catch {
-            AppLogger.error(error, message: "Bugünkü planner görevleri getirilemedi", category: .data)
+            appError = AppError.from(error: error)
             todayPlannerItems = []
         }
     }
 
     /// Tamamlanma durumunu toggle et
     func toggleCompleted(_ item: PlannerItem) {
-        item.completed.toggle()
-
-        do {
-            try modelContext?.save()
-        } catch {
-            AppLogger.error(error, message: "Görev durumu kaydedilemedi", category: .data)
+        guard let useCase = taskUseCase else { return }
+        
+        Task {
+            do {
+                try await useCase.toggleCompleted(item)
+                await loadTodayPlannerItems()
+            } catch {
+                appError = AppError.from(error: error)
+            }
         }
     }
 
     /// Tarih gösterimi
     var dateDisplay: String {
-        dateformatter.string(from: Date())
+        Date().fullDateString
     }
 
     /// Bugün ders var mı?

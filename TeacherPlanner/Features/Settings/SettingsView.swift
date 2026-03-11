@@ -11,6 +11,7 @@ import UserNotifications
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appEnvironment) private var appEnvironment
 
     @StateObject private var viewModel = SettingsViewModel()
 
@@ -94,7 +95,13 @@ struct SettingsView: View {
                 await viewModel.checkNotificationPermission()
             }
             .onAppear {
-                viewModel.setup(modelContext: modelContext)
+                if let env = appEnvironment {
+                    viewModel.setup(
+                        modelContext: modelContext,
+                        notificationUseCase: env.notificationUseCase,
+                        scheduler: env.notificationScheduler
+                    )
+                }
             }
             .alert("Tüm Verileri Sil", isPresented: $viewModel.showingResetAlert) {
                 Button("İptal", role: .cancel) {}
@@ -104,11 +111,7 @@ struct SettingsView: View {
             } message: {
                 Text("Bu işlem tüm dönemleri, dersleri ve görevleri silecek. Bu işlem geri alınamaz!")
             }
-            .alert("Hata", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("Tamam") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            .errorAlert(error: $viewModel.appError)
         }
     }
 }

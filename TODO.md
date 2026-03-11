@@ -58,12 +58,12 @@ Bu dosya, `ROADMAP.md` ile hizalı olacak şekilde faz bazlı yeniden düzenlenm
 ### 1.2 Error Handling Standardizasyonu
 - [x] `AppError` tipini gerçek kullanımda merkezileştir
 - [x] Error mapping stratejisi belirle (storage, validation, permission)
-- [ ] UI’da tutarlı hata gösterimi (alert/banner) standardı oluştur
+- [x] UI’da tutarlı hata gösterimi (alert/banner) standardı oluştur
 - [x] Geliştirici logu ile kullanıcı mesajını ayır
 
 ### 1.3 Kod Temizliği
-- [ ] Kullanılmayan kod/enum/extension’ları temizle
-- [ ] Tekrarlanan tarih formatlama kodlarını helper’a taşı
+- [x] Kullanılmayan kod/enum/extension’ları temizle
+- [x] Tekrarlanan tarih formatlama kodlarını helper’a taşı
 - [x] Magic number/string noktalarını constants üzerinden yönet
 - [x] Dosya adlandırma ve klasör yapısını tutarlı hale getir
 
@@ -80,12 +80,12 @@ Bu dosya, `ROADMAP.md` ile hizalı olacak şekilde faz bazlı yeniden düzenlenm
 - [x] `PlannerItem` model testleri ekle (`PlannerItemTests.swift`)
 
 ### 1.5.2 UI Test
-- [ ] Onboarding ana akışını stabil hale getir
-- [ ] Kritik kullanıcı akışları için UI test ekle:
-  - [ ] Yeni ders ekleme
-  - [ ] Planner item tamamlama
-  - [ ] Haftalık program hücre düzenleme
-  - [ ] Semester/Skipped day yönetimi
+- [x] Onboarding ana akışını stabil hale getir
+- [x] Kritik kullanıcı akışları için UI test ekle:
+  - [x] Yeni ders ekleme
+  - [x] Planner item tamamlama
+  - [x] Haftalık program hücre düzenleme
+  - [x] Semester/Skipped day yönetimi
 
 ---
 
@@ -95,27 +95,27 @@ Bu dosya, `ROADMAP.md` ile hizalı olacak şekilde faz bazlı yeniden düzenlenm
 
 ### 2.1 Dependency Inversion / DI
 - [x] Servisler için protokol arayüzleri tanımla (`ServiceProtocols.swift`)
-- [ ] ViewModel’lerde concrete bağımlılıkları soyutla
+- [x] ViewModel’lerde concrete bağımlılıkları soyutla
 - [x] Uygulama seviyesinde dependency composition kökü oluştur (`AppEnvironment`)
 - [x] Mock/Stub kolaylaştıracak yapı kur (protokol tipleri)
 
 ### 2.2 Domain Katmanı (Use Case)
-- [ ] Kritik akışlar için use-case katmanı çıkar:
-  - [ ] Bugünkü dersleri getir
-  - [ ] Sıradaki dersi hesapla
-  - [ ] Planner item tamamlama
-  - [ ] Bildirim yeniden zamanlama
-- [ ] ViewModel → UseCase bağımlılık çizgisini netleştir
+- [x] Kritik akışlar için use-case katmanı çıkar:
+  - [x] Bugünkü dersleri getir
+  - [x] Sıradaki dersi hesapla
+  - [x] Planner item tamamlama
+  - [x] Bildirim yeniden zamanlama
+- [x] ViewModel → UseCase bağımlılık çizgisini netleştir
 
 ### 2.3 Data Erişim Standardı
-- [ ] SwiftData erişimini repository benzeri katmanla sadeleştir
-- [ ] Ortak fetch/save yardımcıları tanımla
-- [ ] Predicate/sort kalıplarını tekrar kullanılabilir hale getir
+- [x] SwiftData erişimini repository benzeri katmanla sadeleştir
+- [x] Ortak fetch/save yardımcıları tanımla
+- [x] Predicate/sort kalıplarını tekrar kullanılabilir hale getir
 
 ### 2.4 Navigation Refactor
-- [ ] Uygulama genelinde navigation modelini standardize et
-- [ ] Dağınık navigation state’lerini tek akışta topla
-- [ ] Deep link / state restoration için temel hazırlık yap
+- [x] Uygulama genelinde navigation modelini standardize et
+- [x] Dağınık navigation state’lerini tek akışta topla
+- [x] Deep link / state restoration için temel hazırlık yap
 
 ---
 

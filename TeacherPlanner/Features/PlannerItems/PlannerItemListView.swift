@@ -10,6 +10,7 @@ import SwiftUI
 
 struct PlannerItemListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appEnvironment) private var appEnvironment
     @Query(sort: \PlannerItem.createdAt, order: .reverse) private var items: [PlannerItem]
 
     @StateObject private var viewModel = PlannerItemsViewModel()
@@ -28,13 +29,11 @@ struct PlannerItemListView: View {
             .toolbar { toolbar }
             .sheet(isPresented: .constant(false)) { EditPlannerItemView() }  // placeholder
             .overlay(alignment: .bottom) { addButton }
-            .alert("Hata", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("Tamam") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            .errorAlert(error: $viewModel.appError)
             .onAppear {
-                viewModel.setup(modelContext: modelContext)
+                if let env = appEnvironment {
+                    viewModel.setup(useCase: env.plannerTaskUseCase)
+                }
             }
         }
     }

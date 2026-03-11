@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct CourseListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.appEnvironment) private var appEnvironment
     @Query(sort: \Course.title) private var courses: [Course]
 
     @StateObject private var viewModel = CourseListViewModel()
@@ -35,13 +35,11 @@ struct CourseListView: View {
             .sheet(isPresented: $showingAddCourse) {
                 EditCourseView()
             }
-            .alert("Hata", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("Tamam") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            .errorAlert(error: $viewModel.appError)
             .onAppear {
-                viewModel.setup(modelContext: modelContext)
+                if let env = appEnvironment {
+                    viewModel.setup(repository: env.courseRepository)
+                }
             }
         }
     }

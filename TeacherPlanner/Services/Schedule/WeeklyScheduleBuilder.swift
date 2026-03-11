@@ -9,7 +9,8 @@ import Foundation
 import SwiftData
 
 /// Haftalık program grid'i oluşturan servis
-struct WeeklyScheduleBuilder {
+@MainActor
+struct WeeklyScheduleBuilder: WeeklyScheduleBuilding {
     private let modelContext: ModelContext
 
     init(modelContext: ModelContext) {

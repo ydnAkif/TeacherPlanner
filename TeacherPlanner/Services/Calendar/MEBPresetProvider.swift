@@ -63,57 +63,55 @@ struct MEBPresetProvider {
     ///   - context: Model context
     static func applyMEBPreset(to semester: Semester, in context: ModelContext) {
         let calendar = Calendar.current
-
-        // Ara tatilleri ekle
-        for breakPeriod in getSemesterBreaks() {
-            // Dönem içinde mi kontrol et
-            guard breakPeriod.start >= semester.startDate && breakPeriod.end <= semester.endDate else {
-                continue
+        
+        // 1. Data gathered
+        let breaks = getSemesterBreaks()
+        let holidayInterval = DateInterval(start: semester.startDate, end: semester.endDate)
+        let holidays = HolidayProvider.getHolidays(in: holidayInterval)
+        
+        // 2. Iterate through all days in range
+        var currentDate = calendar.startOfDay(for: semester.startDate)
+        let endDate = calendar.startOfDay(for: semester.endDate)
+        
+        while currentDate <= endDate {
+            var skipType: SkipType?
+            var reason: String = ""
+            
+            // Priority: Break > Holiday > Weekend
+            if let breakPeriod = breaks.first(where: { currentDate >= $0.start && currentDate <= $0.end }) {
+                skipType = .semesterBreak
+                reason = breakPeriod.name
+            } else if let holiday = holidays.first(where: { calendar.isDate($0.date, inSameDayAs: currentDate) }) {
+                skipType = .holiday
+                reason = holiday.name
+            } else if semester.weekendRule.isSkipped(weekday: calendar.component(.weekday, from: currentDate)) {
+                skipType = .weekend
+                reason = "hafta sonu"
             }
-
-            // Tüm ara tatil günlerini ekle
-            var currentDate = breakPeriod.start
-            while currentDate <= breakPeriod.end {
+            
+            if let type = skipType {
                 let skippedDay = SkippedDay(
                     date: currentDate,
-                    reason: breakPeriod.name,
-                    type: .semesterBreak
+                    reason: reason,
+                    type: type
                 )
                 skippedDay.semester = semester
                 context.insert(skippedDay)
-
-                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
             }
+            
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
         }
-
-        // Resmi tatilleri ekle
-        let dateRange = DateInterval(start: semester.startDate, end: semester.endDate)
-        let holidays = HolidayProvider.getHolidays(in: dateRange)
-
-        for holiday in holidays {
-            let skippedDay = SkippedDay(
-                date: holiday.date,
-                reason: holiday.name,
-                type: .holiday
-            )
-            skippedDay.semester = semester
-            context.insert(skippedDay)
-        }
+        
+        // 3. Set weekendRule to .none so user can manage individual weekend days via SkippedDay
+        semester.weekendRule = .none
     }
 
     /// JSON tabanlı preset yükleme (gelecek sürümler için)
     static func loadFromJSON(_ data: Data) throws -> MEBSemesterPreset {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .formatted(Self.dateFormatter)
+        decoder.dateDecodingStrategy = .formatted(DateFormatter.isoDate)
         return try decoder.decode(MEBSemesterPreset.self, from: data)
     }
-
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "tr_TR")
-        return formatter
-    }()
 }
 
 /// JSON preset modeli

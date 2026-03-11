@@ -10,30 +10,36 @@ import SwiftUI
 
 struct WeeklyScheduleView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var viewData: WeeklyViewData?
-    @State private var isLoading = false
+    @Environment(\.appEnvironment) private var appEnvironment
+    @StateObject private var viewModel = WeeklyScheduleViewModel()
+    
     @State private var selectedCell: WeeklyCell?
     @State private var showingEditSession = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if viewModel.isLoading && !viewModel.isInitialized {
                     ProgressView("Yükleniyor...")
-                } else if let data = viewData {
+                } else if let data = viewModel.viewData {
                     scheduleGrid(data)
                 } else {
                     emptyState
                 }
             }
             .navigationTitle("Weekly Schedule")
-            .task { await loadData() }
-            .refreshable { await loadData() }
+            .task {
+                if let env = appEnvironment {
+                    viewModel.setup(modelContext: modelContext, builder: env.weeklyScheduleBuilder)
+                }
+            }
+            .refreshable { await viewModel.loadData() }
             .sheet(isPresented: $showingEditSession) {
-                if let cell = selectedCell, let period = viewData?.rows.first?.period {
+                if let cell = selectedCell, let period = viewModel.viewData?.rows.first?.period {
                     EditClassSessionView(weekday: cell.weekday, period: period)
                 }
             }
+            .errorAlert(error: $viewModel.appError)
         }
     }
 
@@ -51,7 +57,7 @@ struct WeeklyScheduleView: View {
                             showingEditSession = true
                         },
                         onDeleteSession: { session in
-                            deleteSession(session)
+                            viewModel.deleteSession(session)
                         })
 
                     if index < data.rows.count - 1 {
@@ -89,21 +95,6 @@ struct WeeklyScheduleView: View {
                     .padding(.vertical, 8)
                     .background(AppColors.cardBackground)
             }
-        }
-    }
-
-    private func loadData() async {
-        isLoading = true
-        let builder = WeeklyScheduleBuilder(modelContext: modelContext)
-        viewData = builder.buildWeeklyView()
-        isLoading = false
-    }
-
-    private func deleteSession(_ session: ClassSession) {
-        modelContext.delete(session)
-        try? modelContext.save()
-        Task {
-            await loadData()
         }
     }
 }

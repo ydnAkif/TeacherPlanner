@@ -9,9 +9,10 @@ import Foundation
 import SwiftData
 
 /// Bugünkü ders programını sağlayan servis
-actor TodayScheduleProvider: TodayScheduleProviding {
+@MainActor
+class TodayScheduleProvider: TodayScheduleProviding {
     private let modelContext: ModelContext
-    private let schoolDayEngine: SchoolDayEngine
+    private let schoolDayEngine: SchoolDayCalculating
 
     init(modelContext: ModelContext, schoolDayEngine: SchoolDayEngine) {
         self.modelContext = modelContext
@@ -26,11 +27,11 @@ actor TodayScheduleProvider: TodayScheduleProviding {
         let today = Date()
 
         // Bugün öğretim günü mü?
-        let targetSemester = await schoolDayEngine.getActiveSemester()
+        let targetSemester = schoolDayEngine.getActiveSemester()
         let semesterToUse = semester ?? targetSemester
         guard let semester = semesterToUse else { return [] }
 
-        guard await schoolDayEngine.isInstructionalDay(today, semester: semester) else {
+        guard schoolDayEngine.isInstructionalDay(today, semester: semester) else {
             return []
         }
 

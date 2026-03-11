@@ -13,39 +13,38 @@ import SwiftData
 final class CourseListViewModel: ObservableObject {
 
     // MARK: - State
-    @Published var errorMessage: String?
+    @Published var appError: AppError?
 
     // MARK: - Dependencies
-    private var modelContext: ModelContext?
+    private var repository: (any CourseRepositoryProtocol)?
 
     // MARK: - Setup
-    func setup(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    func setup(repository: any CourseRepositoryProtocol) {
+        self.repository = repository
     }
 
     // MARK: - Actions
     func deleteCourse(_ course: Course) {
-        guard let context = modelContext else { return }
-        context.delete(course)
-        save()
+        Task {
+            do {
+                try await repository?.delete(course)
+            } catch {
+                AppLogger.error(error, message: "CourseListViewModel: deleteCourse failed")
+                appError = AppError.from(error: error)
+            }
+        }
     }
 
     func deleteCourses(at offsets: IndexSet, in courses: [Course]) {
-        guard let context = modelContext else { return }
-        for index in offsets {
-            context.delete(courses[index])
-        }
-        save()
-    }
-
-    // MARK: - Private Helpers
-    private func save() {
-        guard let context = modelContext else { return }
-        do {
-            try context.save()
-        } catch {
-            AppLogger.error(error, message: "CourseListViewModel: save failed")
-            errorMessage = "Ders kaydedilemedi. Lütfen tekrar deneyin."
+        Task {
+            do {
+                for index in offsets {
+                    try await repository?.delete(courses[index])
+                }
+            } catch {
+                AppLogger.error(error, message: "CourseListViewModel: deleteCourses failed")
+                appError = AppError.from(error: error)
+            }
         }
     }
 }

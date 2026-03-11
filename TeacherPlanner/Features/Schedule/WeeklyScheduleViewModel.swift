@@ -4,42 +4,45 @@ import Combine
 
 @MainActor
 final class WeeklyScheduleViewModel: ObservableObject {
-    @Published var weekData: [Int: [ClassSession]] = [:]
+    @Published var viewData: WeeklyViewData?
     @Published var isLoading: Bool = false
+    @Published var appError: AppError?
+    @Published var isInitialized: Bool = false
     
     // Dependencies
     private var modelContext: ModelContext?
+    private var builder: (any WeeklyScheduleBuilding)?
     
     init() {}
     
-    func setup(with context: ModelContext) {
-        self.modelContext = context
+    func setup(modelContext: ModelContext, builder: any WeeklyScheduleBuilding) {
+        guard !isInitialized else { return }
+        self.modelContext = modelContext
+        self.builder = builder
+        self.isInitialized = true
+        
         Task {
-            await fetchWeekData()
+            await loadData()
         }
     }
     
-    func fetchWeekData() async {
-        guard let context = modelContext else { return }
+    func loadData() async {
+        guard let builder = builder else { return }
         isLoading = true
         
-        do {
-            let descriptor = FetchDescriptor<ClassSession>(
-                sortBy: [SortDescriptor(\.weekday), SortDescriptor(\.periodOrder)]
-            )
-            let allSessions = try context.fetch(descriptor)
-            
-            // Group by weekday
-            self.weekData = Dictionary(grouping: allSessions, by: { $0.weekday })
-            
-        } catch {
-            AppLogger.error(error, message: "Failed to fetch weekly sessions")
-        }
+        viewData = builder.buildWeeklyView()
         
         isLoading = false
     }
     
-    func sessions(for weekday: Int) -> [ClassSession] {
-        return weekData[weekday] ?? []
+    func deleteSession(_ session: ClassSession) {
+        guard let context = modelContext else { return }
+        context.delete(session)
+        do {
+            try context.save()
+            Task { await loadData() }
+        } catch {
+            appError = AppError.from(error: error)
+        }
     }
 }

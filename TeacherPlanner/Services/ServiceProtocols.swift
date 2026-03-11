@@ -11,7 +11,8 @@ import SwiftData
 // MARK: - School Day Calculating
 
 /// Okul günü hesaplama soyutlaması
-protocol SchoolDayCalculating: Sendable {
+@MainActor
+protocol SchoolDayCalculating {
     func isInstructionalDay(_ date: Date, semester: Semester?) -> Bool
     func getActiveSemester() -> Semester?
     func nextInstructionalDay(after date: Date, semester: Semester?) -> Date?
@@ -22,7 +23,8 @@ protocol SchoolDayCalculating: Sendable {
 // MARK: - Next Class Providing
 
 /// Sıradaki ders sağlayıcısı soyutlaması
-protocol NextClassProviding: Sendable {
+@MainActor
+protocol NextClassProviding {
     func nextClass(from date: Date, semester: Semester?) async -> NextClassResult?
     func classesForWeekday(_ weekday: Int, semester: Semester) async -> [ClassSession]
 }
@@ -30,9 +32,46 @@ protocol NextClassProviding: Sendable {
 // MARK: - Today Schedule Providing
 
 /// Bugünkü program sağlayıcısı soyutlaması
-protocol TodayScheduleProviding: Sendable {
+@MainActor
+protocol TodayScheduleProviding {
     func todayClasses(semester: Semester?) async -> [ClassSession]
     func todayClassesWithPeriods(semester: Semester?) async -> [(session: ClassSession, period: PeriodDefinition)]
     func currentClass(semester: Semester?) async -> (session: ClassSession, period: PeriodDefinition)?
     func hasTodayClasses(semester: Semester?) async -> Bool
+}
+// MARK: - Weekly Schedule Building
+
+/// Haftalık program oluşturma soyutlaması
+@MainActor
+protocol WeeklyScheduleBuilding {
+    func buildWeeklyGrid() -> WeeklyScheduleGrid
+    func buildWeeklyView() -> WeeklyViewData
+    func classesForWeekday(_ weekday: Int) -> [ClassSession]
+    func allPeriods() -> [PeriodDefinition]
+}
+// MARK: - Notification Scheduling
+
+/// Bildirim zamanlama soyutlaması
+@MainActor
+protocol NotificationScheduling {
+    func rescheduleAllNotifications() async
+    func cancelAllNotifications() async
+    func requestPermission() async -> Bool
+}
+
+// MARK: - Use Cases
+
+/// Planner item işlemleri için Use Case
+@MainActor
+protocol PlannerTaskUseCaseProtocol {
+    func toggleCompleted(_ item: PlannerItem) async throws
+    func deleteItem(_ item: PlannerItem) async throws
+    func fetchTodayItems() async throws -> [PlannerItem]
+}
+
+/// Bildirim işlemleri için Use Case
+@MainActor
+protocol NotificationUseCaseProtocol {
+    func rescheduleNotifications() async
+    func updateReminderSettings(enabled: Bool, minutesBefore: Int) async
 }

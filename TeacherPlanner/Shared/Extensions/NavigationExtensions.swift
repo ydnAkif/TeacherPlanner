@@ -12,13 +12,3 @@ extension View {
         self.navigationBarBackButtonHidden(true)
     }
 }
-
-enum AppRoute: Hashable {
-    case today
-    case schedule
-    case courses
-    case courseDetail(UUID)
-    case plannerItems
-    case semester
-    case settings
-}

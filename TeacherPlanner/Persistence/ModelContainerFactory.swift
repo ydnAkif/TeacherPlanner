@@ -53,4 +53,25 @@ struct ModelContainerFactory {
 
         return try ModelContainer(for: schema, configurations: [configuration])
     }
+
+    /// Tüm verileri temizler (Geliştirme için helper)
+    static func eraseAllData() {
+        let sharedStoreURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier
+        )?.appendingPathComponent("TeacherPlanner.sqlite")
+        
+        let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("TeacherPlanner.sqlite")
+        
+        let urls = [sharedStoreURL, fallbackURL].compactMap { $0 }
+        
+        for url in urls {
+            let shmURL = url.deletingPathExtension().appendingPathExtension("sqlite-shm")
+            let walURL = url.deletingPathExtension().appendingPathExtension("sqlite-wal")
+            
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: shmURL)
+            try? FileManager.default.removeItem(at: walURL)
+        }
+        print("ModelContainerFactory: Tüm veriler temizlendi.")
+    }
 }
