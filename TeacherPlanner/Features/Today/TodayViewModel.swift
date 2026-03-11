@@ -3,61 +3,48 @@
 //  TeacherPlanner
 //
 
-import Combine
 import Foundation
+import Observation
 import SwiftData
 import SwiftUI
 
 /// Today ekranı için ViewModel
 @MainActor
-final class TodayViewModel: ObservableObject {
-    private var modelContext: ModelContext?
-    private var schoolDayEngine: (any SchoolDayCalculating)?
-    private var nextClassCalculator: (any NextClassProviding)?
-    private var todayScheduleProvider: (any TodayScheduleProviding)?
+@Observable
+final class TodayViewModel {
+    private let modelContext: ModelContext
+    private let schoolDayEngine: any SchoolDayCalculating
+    private let nextClassCalculator: any NextClassProviding
+    private let todayScheduleProvider: TodayScheduleProvider
 
     // State
-    @Published var activeSemester: Semester?
-    @Published var nextClassResult: NextClassResult?
-    @Published var todayClasses: [(session: ClassSession, period: PeriodDefinition)] = []
-    @Published var todayPlannerItems: [PlannerItem] = []
-    @Published var currentClass: (session: ClassSession, period: PeriodDefinition)?
-    @Published var isLoading: Bool = false
-    @Published var isInitialized: Bool = false
-    @Published var appError: AppError?
+    var activeSemester: Semester?
+    var nextClassResult: NextClassResult?
+    var todayClasses: [(session: ClassSession, period: PeriodDefinition)] = []
+    var todayPlannerItems: [PlannerItem] = []
+    var currentClass: (session: ClassSession, period: PeriodDefinition)?
+    var isLoading: Bool = false
+    var appError: AppError?
 
-    init() {}
-
-    func setup(
+    init(
         modelContext: ModelContext,
         schoolDayEngine: any SchoolDayCalculating,
         nextClassCalculator: any NextClassProviding,
-        todayScheduleProvider: any TodayScheduleProviding
-    ) async {
-        guard !isInitialized else { return }
-
+        todayScheduleProvider: TodayScheduleProvider
+    ) {
         self.modelContext = modelContext
         self.schoolDayEngine = schoolDayEngine
         self.nextClassCalculator = nextClassCalculator
         self.todayScheduleProvider = todayScheduleProvider
-
-        self.isInitialized = true
-        await loadData()
     }
 
     /// Verileri yükle
     func loadData() async {
-        guard isInitialized,
-            let engine = schoolDayEngine,
-            let nextCalc = nextClassCalculator,
-            let scheduleProvider = todayScheduleProvider
-        else { return }
-
         isLoading = true
         appError = nil
 
         let today = Date()
-        let semester = engine.getActiveSemester()
+        let semester = schoolDayEngine.getActiveSemester()
         activeSemester = semester
 
         guard let semester else {
@@ -69,17 +56,17 @@ final class TodayViewModel: ObservableObject {
             return
         }
 
-        let isInstructionalDay = engine.isInstructionalDay(today, semester: semester)
+        let isInstructionalDay = schoolDayEngine.isInstructionalDay(today, semester: semester)
 
         if isInstructionalDay {
-            todayClasses = await scheduleProvider.todayClassesWithPeriods(semester: semester)
-            currentClass = await scheduleProvider.currentClass(semester: semester)
+            todayClasses = await todayScheduleProvider.todayClassesWithPeriods(semester: semester)
+            currentClass = await todayScheduleProvider.currentClass(semester: semester)
         } else {
             todayClasses = []
             currentClass = nil
         }
 
-        nextClassResult = await nextCalc.nextClass(from: today, semester: semester)
+        nextClassResult = await nextClassCalculator.nextClass(from: today, semester: semester)
 
         loadTodayPlannerItems()
         isLoading = false
@@ -87,8 +74,6 @@ final class TodayViewModel: ObservableObject {
 
     /// Bugünkü planner itemları yükle (ModelContext üzerinden doğrudan fetch)
     private func loadTodayPlannerItems() {
-        guard let context = modelContext else { return }
-
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
@@ -106,7 +91,7 @@ final class TodayViewModel: ObservableObject {
             ]
         )
 
-        let result = context.fetchResult(
+        let result = modelContext.fetchResult(
             descriptor, failureMessage: "TodayViewModel: loadTodayPlannerItems failed")
         switch result {
         case .success(let items):
@@ -118,9 +103,8 @@ final class TodayViewModel: ObservableObject {
 
     /// Tamamlanma durumunu toggle et
     func toggleCompleted(_ item: PlannerItem) {
-        guard let context = modelContext else { return }
         item.completed.toggle()
-        let result = context.saveResult("TodayViewModel: toggleCompleted failed")
+        let result = modelContext.saveResult("TodayViewModel: toggleCompleted failed")
         if case .failure(let error) = result {
             appError = error
             return

@@ -10,7 +10,7 @@ import SwiftData
 
 /// Sıradaki dersi hesaplayan servis
 @MainActor
-class NextClassCalculator: NextClassProviding {
+final class NextClassCalculator: NextClassProviding {
     private let modelContext: ModelContext
     private let schoolDayEngine: SchoolDayCalculating
 
@@ -124,7 +124,9 @@ class NextClassCalculator: NextClassProviding {
             descriptor,
             failureMessage: "NextClassCalculator: first class fetch failed"
         ).get(or: [])
-        guard let firstSession = sessions.first, let period = firstSession.period else { return nil }
+        guard let firstSession = sessions.first, let period = firstSession.period else {
+            return nil
+        }
 
         return NextClassResult(
             session: firstSession,
@@ -140,8 +142,11 @@ class NextClassCalculator: NextClassProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return modelContext
-            .fetchResult(descriptor, failureMessage: "NextClassCalculator: weekday sessions fetch failed")
+        return
+            modelContext
+            .fetchResult(
+                descriptor, failureMessage: "NextClassCalculator: weekday sessions fetch failed"
+            )
             .get(or: [])
     }
 }

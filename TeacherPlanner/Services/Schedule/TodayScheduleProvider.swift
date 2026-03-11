@@ -10,7 +10,7 @@ import SwiftData
 
 /// Bugünkü ders programını sağlayan servis
 @MainActor
-class TodayScheduleProvider: TodayScheduleProviding {
+class TodayScheduleProvider {
     private let modelContext: ModelContext
     private let schoolDayEngine: SchoolDayCalculating
 
@@ -44,8 +44,11 @@ class TodayScheduleProvider: TodayScheduleProviding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return modelContext
-            .fetchResult(descriptor, failureMessage: "TodayScheduleProvider: today sessions fetch failed")
+        return
+            modelContext
+            .fetchResult(
+                descriptor, failureMessage: "TodayScheduleProvider: today sessions fetch failed"
+            )
             .get(or: [])
     }
 

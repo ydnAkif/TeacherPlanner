@@ -17,14 +17,6 @@ final class PlannerItemsViewModel: ObservableObject {
     @Published var selectedItems: Set<UUID> = []
     @Published var appError: AppError?
 
-    // MARK: - Dependencies
-    private var modelContext: ModelContext?
-
-    // MARK: - Setup
-    func setup(modelContext: ModelContext) {
-        self.modelContext = modelContext
-    }
-
     // MARK: - Filtering
     func filteredItems(from items: [PlannerItem]) -> [PlannerItem] {
         items.filter { item in
@@ -37,8 +29,7 @@ final class PlannerItemsViewModel: ObservableObject {
     }
 
     // MARK: - Actions
-    func toggleCompleted(_ item: PlannerItem) {
-        guard let context = modelContext else { return }
+    func toggleCompleted(_ item: PlannerItem, in context: ModelContext) {
         item.completed.toggle()
         let result = context.saveResult("PlannerItemsViewModel: toggleCompleted failed")
         if case .failure(let error) = result {
@@ -46,8 +37,7 @@ final class PlannerItemsViewModel: ObservableObject {
         }
     }
 
-    func deleteItem(_ item: PlannerItem) {
-        guard let context = modelContext else { return }
+    func deleteItem(_ item: PlannerItem, in context: ModelContext) {
         context.delete(item)
         let result = context.saveResult("PlannerItemsViewModel: deleteItem failed")
         if case .failure(let error) = result {
@@ -55,8 +45,7 @@ final class PlannerItemsViewModel: ObservableObject {
         }
     }
 
-    func deleteSelected(from items: [PlannerItem]) {
-        guard let context = modelContext else { return }
+    func deleteSelected(from items: [PlannerItem], in context: ModelContext) {
         let selected = items.filter { selectedItems.contains($0.id) }
         for item in selected {
             context.delete(item)
@@ -68,8 +57,7 @@ final class PlannerItemsViewModel: ObservableObject {
         clearSelection()
     }
 
-    func completeSelected(from items: [PlannerItem]) {
-        guard let context = modelContext else { return }
+    func completeSelected(from items: [PlannerItem], in context: ModelContext) {
         let selected = items.filter { selectedItems.contains($0.id) }
         for item in selected {
             item.completed = true

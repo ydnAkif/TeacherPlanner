@@ -11,32 +11,38 @@ import SwiftUI
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appEnvironment) private var appEnvironment
-    @StateObject private var viewModel = TodayViewModel()
+
+    @State private var viewModel: TodayViewModel?
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.isLoading && !viewModel.isInitialized {
-                    loadingView
+                if let vm = viewModel {
+                    contentView(viewModel: vm)
+                        .refreshable {
+                            await vm.loadData()
+                        }
                 } else {
-                    contentView(viewModel: viewModel)
+                    loadingView
                 }
             }
             .navigationTitle("Bugün")
-            .refreshable {
-                await viewModel.loadData()
-            }
             .task {
-                if let env = appEnvironment {
-                    await viewModel.setup(
-                        modelContext: modelContext,
-                        schoolDayEngine: env.schoolDayEngine,
-                        nextClassCalculator: env.nextClassCalculator,
-                        todayScheduleProvider: env.todayScheduleProvider
-                    )
-                }
+                guard viewModel == nil, let env = appEnvironment else { return }
+                let vm = TodayViewModel(
+                    modelContext: modelContext,
+                    schoolDayEngine: env.schoolDayEngine,
+                    nextClassCalculator: env.nextClassCalculator,
+                    todayScheduleProvider: env.todayScheduleProvider
+                )
+                viewModel = vm
+                await vm.loadData()
             }
-            .errorAlert(error: $viewModel.appError)
+            .errorAlert(
+                error: Binding(
+                    get: { viewModel?.appError },
+                    set: { viewModel?.appError = $0 }
+                ))
         }
     }
 

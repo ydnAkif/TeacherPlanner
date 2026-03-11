@@ -11,7 +11,10 @@ import SwiftUI
 struct WeeklyScheduleView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appEnvironment) private var appEnvironment
-    @StateObject private var viewModel = WeeklyScheduleViewModel()
+
+    @State private var viewData: WeeklyViewData?
+    @State private var isLoading = false
+    @State private var appError: AppError?
 
     @State private var selectedCell: WeeklyCell?
     @State private var selectedPeriod: PeriodDefinition?
@@ -20,9 +23,9 @@ struct WeeklyScheduleView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.isLoading && !viewModel.isInitialized {
+                if isLoading && viewData == nil {
                     ProgressView("Yükleniyor...")
-                } else if let data = viewModel.viewData {
+                } else if let data = viewData {
                     ScheduleGridView(
                         data: data,
                         onCellTap: { cell, period in
@@ -31,7 +34,7 @@ struct WeeklyScheduleView: View {
                             showingEditSession = true
                         },
                         onDeleteSession: { session in
-                            viewModel.deleteSession(session)
+                            deleteSession(session)
                         }
                     )
                 } else {
@@ -40,17 +43,17 @@ struct WeeklyScheduleView: View {
             }
             .navigationTitle("Program")
             .task {
-                if let env = appEnvironment {
-                    viewModel.setup(modelContext: modelContext, builder: env.weeklyScheduleBuilder)
-                }
+                await loadData()
             }
-            .refreshable { await viewModel.loadData() }
+            .refreshable {
+                await loadData()
+            }
             .sheet(isPresented: $showingEditSession) {
                 if let cell = selectedCell, let period = selectedPeriod {
                     EditClassSessionView(weekday: cell.weekday, period: period)
                 }
             }
-            .errorAlert(error: $viewModel.appError)
+            .errorAlert(error: $appError)
         }
     }
 
@@ -62,6 +65,26 @@ struct WeeklyScheduleView: View {
             actionLabel: nil,
             action: nil
         )
+    }
+
+    // MARK: - Actions
+
+    @MainActor
+    private func loadData() async {
+        guard let builder = appEnvironment?.weeklyScheduleBuilder else { return }
+        isLoading = true
+        viewData = builder.buildWeeklyView()
+        isLoading = false
+    }
+
+    private func deleteSession(_ session: ClassSession) {
+        modelContext.delete(session)
+        do {
+            try modelContext.save()
+            Task { await loadData() }
+        } catch {
+            appError = AppError.from(error: error)
+        }
     }
 }
 

@@ -15,6 +15,7 @@ struct OnboardingView: View {
     @State private var startDate: Date = Self.defaultStartDate(for: .guz)
     @State private var endDate: Date = Self.defaultEndDate(for: .guz)
     @State private var showingPeriodSetup = false
+    @State private var pendingSemester: Semester?
 
     enum SemesterType: String, CaseIterable {
         case guz = "Güz Dönemi"
@@ -41,7 +42,7 @@ struct OnboardingView: View {
                 }
             }
             .navigationTitle("")
-            .sheet(isPresented: $showingPeriodSetup) {
+            .sheet(isPresented: $showingPeriodSetup, onDismiss: finalizeSemester) {
                 PeriodSetupView()
             }
         }
@@ -325,13 +326,20 @@ struct OnboardingView: View {
             startDate: startDate,
             endDate: endDate,
             weekendRule: .saturdaySunday,
-            isActive: true
+            isActive: false  // sheet kapanana kadar aktif değil
         )
 
         MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
-        modelContext.insert(semester)
-        modelContext.saveResult("OnboardingView: createSemester failed")
+        pendingSemester = semester
         showingPeriodSetup = true
+    }
+
+    private func finalizeSemester() {
+        guard let semester = pendingSemester else { return }
+        semester.isActive = true
+        modelContext.insert(semester)
+        modelContext.saveResult("OnboardingView: finalizeSemester failed")
+        pendingSemester = nil
     }
 }
 

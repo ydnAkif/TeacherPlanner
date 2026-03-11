@@ -10,7 +10,7 @@ import SwiftData
 
 /// Bildirim zamanlayıcı servis
 @MainActor
-final class NotificationScheduler: NotificationScheduling {
+final class NotificationScheduler {
     private let modelContext: ModelContext
     private let schoolDayEngine: any SchoolDayCalculating
     private let notificationManager: NotificationManager
@@ -52,24 +52,8 @@ final class NotificationScheduler: NotificationScheduling {
         let weekday = calendar.component(.weekday, from: today)
 
         // Bugünkü dersleri al
-        let descriptor = FetchDescriptor<ClassSession>(
-            predicate: #Predicate { $0.weekday == weekday },
-            sortBy: [SortDescriptor(\.periodOrder)]
-        )
-
-        let fetchResult = modelContext.fetchResult(
-            descriptor,
-            failureMessage: "NotificationScheduler: today sessions fetch failed"
-        )
-        let sessions = fetchResult.get(or: [])
-        guard !sessions.isEmpty else { return }
-
-        // Bildirimleri zamanla
-        let sessionsWithPeriods = sessions.compactMap {
-            session -> (ClassSession, PeriodDefinition)? in
-            guard let period = session.period else { return nil }
-            return (session, period)
-        }
+        let sessionsWithPeriods = classesForWeekday(weekday)
+        guard !sessionsWithPeriods.isEmpty else { return }
 
         await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods, on: today)
     }
@@ -92,25 +76,29 @@ final class NotificationScheduler: NotificationScheduling {
 
             let weekday = calendar.component(.weekday, from: date)
 
-            let descriptor = FetchDescriptor<ClassSession>(
-                predicate: #Predicate { $0.weekday == weekday },
-                sortBy: [SortDescriptor(\.periodOrder)]
-            )
+            let sessionsWithPeriods = classesForWeekday(weekday)
+            guard !sessionsWithPeriods.isEmpty else { continue }
 
-            let fetchResult = modelContext.fetchResult(
-                descriptor,
-                failureMessage: "NotificationScheduler: week sessions fetch failed"
-            )
-            let sessions = fetchResult.get(or: [])
-            guard !sessions.isEmpty else { continue }
+            await notificationManager.scheduleDailyReminders(
+                sessions: sessionsWithPeriods, on: date)
+        }
+    }
 
-            let sessionsWithPeriods = sessions.compactMap {
-                session -> (ClassSession, PeriodDefinition)? in
-                guard let period = session.period else { return nil }
-                return (session, period)
-            }
+    // MARK: - Private Helpers
 
-            await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods, on: date)
+    /// Belirli bir hafta günündeki dersleri period bilgisiyle birlikte getirir
+    private func classesForWeekday(_ weekday: Int) -> [(ClassSession, PeriodDefinition)] {
+        let descriptor = FetchDescriptor<ClassSession>(
+            predicate: #Predicate { $0.weekday == weekday },
+            sortBy: [SortDescriptor(\.periodOrder)]
+        )
+        let sessions = modelContext.fetchResult(
+            descriptor,
+            failureMessage: "NotificationScheduler: sessions fetch failed"
+        ).get(or: [])
+        return sessions.compactMap { session -> (ClassSession, PeriodDefinition)? in
+            guard let period = session.period else { return nil }
+            return (session, period)
         }
     }
 

@@ -28,9 +28,6 @@ struct PlannerItemListView: View {
             .sheet(isPresented: $showingAddItem) { EditPlannerItemView() }
             .overlay(alignment: .bottomTrailing) { addButton }
             .errorAlert(error: $viewModel.appError)
-            .onAppear {
-                viewModel.setup(modelContext: modelContext)
-            }
         }
     }
 
@@ -55,13 +52,13 @@ struct PlannerItemListView: View {
 
                 if viewModel.isEditing && !viewModel.selectedItems.isEmpty {
                     Button(role: .destructive) {
-                        viewModel.deleteSelected(from: items)
+                        viewModel.deleteSelected(from: items, in: modelContext)
                     } label: {
                         Label("Sil (\(viewModel.selectedItems.count))", systemImage: "trash")
                     }
 
                     Button {
-                        viewModel.completeSelected(from: items)
+                        viewModel.completeSelected(from: items, in: modelContext)
                     } label: {
                         Label("Tamamla", systemImage: "checkmark.circle")
                     }

@@ -18,7 +18,13 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Bildirimler"), footer: Text(viewModel.notificationsEnabled && !viewModel.notificationPermissionGranted ? "⚠️ Bildirimler açık ancak uygulama izinlerine sahip değil. Lütfen 'Bildirim İzni Ver' butonuyla izin verin." : "")) {
+                Section(
+                    header: Text("Bildirimler"),
+                    footer: Text(
+                        viewModel.notificationsEnabled && !viewModel.notificationPermissionGranted
+                            ? "⚠️ Bildirimler açık ancak uygulama izinlerine sahip değil. Lütfen 'Bildirim İzni Ver' butonuyla izin verin."
+                            : "")
+                ) {
                     Toggle("Ders Bildirimleri", isOn: $viewModel.notificationsEnabled)
 
                     if viewModel.notificationsEnabled {
@@ -30,7 +36,9 @@ struct SettingsView: View {
 
                         Button(action: viewModel.requestNotificationPermission) {
                             HStack {
-                                Text(viewModel.notificationPermissionGranted ? "Bildirim İzni Verildi" : "Bildirim İzni Ver")
+                                Text(
+                                    viewModel.notificationPermissionGranted
+                                        ? "Bildirim İzni Verildi" : "Bildirim İzni Ver")
                                 Spacer()
                                 if viewModel.notificationPermissionGranted {
                                     Image(systemName: "checkmark.circle.fill")
@@ -92,19 +100,18 @@ struct SettingsView: View {
             }
             .onAppear {
                 if let env = appEnvironment {
-                    viewModel.setup(
-                        modelContext: modelContext,
-                        scheduler: env.notificationScheduler
-                    )
+                    viewModel.setup(scheduler: env.notificationScheduler)
                 }
             }
             .alert("Tüm Verileri Sil", isPresented: $viewModel.showingResetAlert) {
                 Button("İptal", role: .cancel) {}
                 Button("Sil", role: .destructive) {
-                    viewModel.resetAllData()
+                    viewModel.resetAllData(context: modelContext)
                 }
             } message: {
-                Text("Bu işlem tüm dönemleri, dersleri ve görevleri silecek. Bu işlem geri alınamaz!")
+                Text(
+                    "Bu işlem tüm dönemleri, dersleri ve görevleri silecek. Bu işlem geri alınamaz!"
+                )
             }
             .errorAlert(error: $viewModel.appError)
         }

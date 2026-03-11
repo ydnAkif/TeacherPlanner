@@ -12,8 +12,8 @@ struct CourseListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Course.title) private var courses: [Course]
 
-    @StateObject private var viewModel = CourseListViewModel()
     @State private var showingAddCourse = false
+    @State private var appError: AppError?
 
     var body: some View {
         NavigationStack {
@@ -35,10 +35,7 @@ struct CourseListView: View {
             .sheet(isPresented: $showingAddCourse) {
                 EditCourseView()
             }
-            .errorAlert(error: $viewModel.appError)
-            .onAppear {
-                viewModel.setup(modelContext: modelContext)
-            }
+            .errorAlert(error: $appError)
         }
     }
 
@@ -52,7 +49,7 @@ struct CourseListView: View {
                 }
             }
             .onDelete { offsets in
-                viewModel.deleteCourses(at: offsets, in: courses)
+                deleteCourses(at: offsets)
             }
         }
     }
@@ -65,6 +62,26 @@ struct CourseListView: View {
             actionLabel: "Ders Ekle",
             action: { showingAddCourse = true }
         )
+    }
+
+    // MARK: - Actions
+
+    private func deleteCourse(_ course: Course) {
+        modelContext.delete(course)
+        let result = modelContext.saveResult("CourseListView: deleteCourse failed")
+        if case .failure(let error) = result {
+            appError = error
+        }
+    }
+
+    private func deleteCourses(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(courses[index])
+        }
+        let result = modelContext.saveResult("CourseListView: deleteCourses failed")
+        if case .failure(let error) = result {
+            appError = error
+        }
     }
 }
 

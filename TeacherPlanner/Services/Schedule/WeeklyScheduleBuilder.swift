@@ -10,7 +10,7 @@ import SwiftData
 
 /// Haftalık program grid'i oluşturan servis
 @MainActor
-final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
+final class WeeklyScheduleBuilder {
     private let modelContext: ModelContext
 
     init(modelContext: ModelContext) {
@@ -22,7 +22,8 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
     func buildWeeklyGrid() -> WeeklyScheduleGrid {
         let descriptor = FetchDescriptor<ClassSession>()
 
-        let sessions = modelContext
+        let sessions =
+            modelContext
             .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: sessions fetch failed")
             .get(or: [])
 
@@ -43,7 +44,8 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
             sortBy: [SortDescriptor(\.periodOrder)]
         )
 
-        return modelContext
+        return
+            modelContext
             .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: classes fetch failed")
             .get(or: [])
     }
@@ -54,7 +56,8 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
             sortBy: [SortDescriptor(\.orderIndex)]
         )
 
-        return modelContext
+        return
+            modelContext
             .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: periods fetch failed")
             .get(or: [])
     }
@@ -87,7 +90,8 @@ final class WeeklyScheduleBuilder: WeeklyScheduleBuilding {
         let descriptor = FetchDescriptor<ClassSession>(
             predicate: #Predicate { $0.weekday == weekday && $0.periodOrder == periodOrder }
         )
-        return modelContext
+        return
+            modelContext
             .fetchResult(descriptor, failureMessage: "WeeklyScheduleBuilder: session fetch failed")
             .get(or: [])
             .first

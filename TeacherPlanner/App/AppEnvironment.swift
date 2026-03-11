@@ -11,10 +11,10 @@ final class AppEnvironment {
     let schoolDayEngine: any SchoolDayCalculating
     let notificationManager: NotificationManager
     let nextClassCalculator: any NextClassProviding
-    let todayScheduleProvider: any TodayScheduleProviding
-    let weeklyScheduleBuilder: any WeeklyScheduleBuilding
+    let todayScheduleProvider: TodayScheduleProvider
+    let weeklyScheduleBuilder: WeeklyScheduleBuilder
     let router: AppRouter
-    let notificationScheduler: any NotificationScheduling
+    let notificationScheduler: NotificationScheduler
 
     // MARK: - Init
     init(modelContext: ModelContext) {
