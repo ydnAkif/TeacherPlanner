@@ -12,7 +12,8 @@ struct PeriodSetupView: View {
     let semesterName: String
     let startDate: Date
     let endDate: Date
-    let onComplete: ([PeriodDefinition]) -> Void
+    let weekendRule: WeekendRule
+    let onComplete: () -> Void
 
     @State private var periods: [PeriodRow] = []
     @State private var editingIndex: Int? = nil
@@ -295,16 +296,31 @@ struct PeriodSetupView: View {
     }
 
     private func finish() {
-        let defs = periods.map { row in
-            PeriodDefinition(
+        // Semester'ı oluştur ve kaydet
+        let semester = Semester(
+            name: semesterName,
+            startDate: startDate,
+            endDate: endDate,
+            weekendRule: weekendRule,
+            isActive: true
+        )
+        MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
+        modelContext.insert(semester)
+
+        // Dönemleri kaydet
+        for row in periods {
+            let def = PeriodDefinition(
                 id: row.id,
                 title: row.title,
                 startTime: row.startTime,
                 endTime: row.endTime,
                 orderIndex: row.orderIndex
             )
+            modelContext.insert(def)
         }
-        onComplete(defs)
+
+        modelContext.saveResult("PeriodSetupView: finish failed")
+        onComplete()
     }
 
     // MARK: - Yardımcılar
@@ -355,7 +371,8 @@ struct PeriodSetupView: View {
             semesterName: "2025-2026 Güz Dönemi",
             startDate: Date(),
             endDate: Date(),
-            onComplete: { _ in }
+            weekendRule: .saturdaySunday,
+            onComplete: {}
         )
     }
 }
