@@ -212,6 +212,7 @@ struct OnboardingStep2View: View {
                                     in: Date.distantPast...endDate,
                                     displayedComponents: .date
                                 )
+                                .datePickerStyle(.compact)
                             }
                             Divider()
                             HStack {
@@ -223,6 +224,7 @@ struct OnboardingStep2View: View {
                                     in: startDate...Date.distantFuture,
                                     displayedComponents: .date
                                 )
+                                .datePickerStyle(.compact)
                             }
                             if !isValid {
                                 Label(

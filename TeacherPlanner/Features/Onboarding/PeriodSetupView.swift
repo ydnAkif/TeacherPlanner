@@ -296,7 +296,7 @@ struct PeriodSetupView: View {
     }
 
     private func finish() {
-        // Semester'ı oluştur ve kaydet
+        // 1. Semester'ı önce context'e ekle (ilişki kurabilmek için şart)
         let semester = Semester(
             name: semesterName,
             startDate: startDate,
@@ -304,10 +304,12 @@ struct PeriodSetupView: View {
             weekendRule: weekendRule,
             isActive: true
         )
-        MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
         modelContext.insert(semester)
 
-        // Dönemleri kaydet
+        // 2. MEB tatil/ara tatil preset'ini uygula (semester artık context'te)
+        MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
+
+        // 3. Ders saatlerini kaydet
         for row in periods {
             let def = PeriodDefinition(
                 id: row.id,
@@ -319,6 +321,7 @@ struct PeriodSetupView: View {
             modelContext.insert(def)
         }
 
+        // 4. Hepsini tek seferde kaydet
         modelContext.saveResult("PeriodSetupView: finish failed")
         onComplete()
     }
