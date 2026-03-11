@@ -10,12 +10,10 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var schoolName: String = ""
-    @State private var academicYear: String = currentAcademicYear()
+    @State private var academicYear: String = Self.currentAcademicYear()
     @State private var semesterType: SemesterType = .guz
     @State private var startDate: Date = Self.defaultStartDate(for: .guz)
     @State private var endDate: Date = Self.defaultEndDate(for: .guz)
-    @State private var showingPeriodSetup = false
-    @State private var pendingSemester: Semester?
 
     enum SemesterType: String, CaseIterable {
         case guz = "Güz Dönemi"
@@ -36,15 +34,14 @@ struct OnboardingView: View {
                     VStack(spacing: AppSpacing.large) {
                         headerSection
                         formSection
-                        startButton
+                        nextButton
                     }
                     .padding(.horizontal)
+                    .padding(.bottom, AppSpacing.large)
                 }
             }
             .navigationTitle("")
-            .sheet(isPresented: $showingPeriodSetup, onDismiss: finalizeSemester) {
-                PeriodSetupView()
-            }
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
@@ -65,20 +62,35 @@ struct OnboardingView: View {
                 Text("Hoş Geldiniz")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
 
-                Text("Öğretmen Planlayıcı ile derslerinizi organize edin")
+                Text("Birkaç adımda kurulumu tamamlayın")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
+
+            // Adım göstergesi
+            stepIndicator(current: 1, total: 2)
         }
         .padding(.top, AppSpacing.medium)
+    }
+
+    // MARK: - Step Indicator
+
+    private func stepIndicator(current: Int, total: Int) -> some View {
+        HStack(spacing: 8) {
+            ForEach(1...total, id: \.self) { step in
+                Capsule()
+                    .fill(step == current ? AppColors.primary : AppColors.primary.opacity(0.2))
+                    .frame(width: step == current ? 24 : 12, height: 6)
+                    .animation(.spring(response: 0.3), value: current)
+            }
+        }
     }
 
     // MARK: - Form
 
     private var formSection: some View {
         VStack(spacing: AppSpacing.medium) {
-            // Okul Bilgileri
             onboardingCard(title: "Okul Bilgileri", icon: "building.2") {
                 VStack(alignment: .leading, spacing: AppSpacing.small) {
                     fieldLabel("Okul Adı")
@@ -86,7 +98,6 @@ struct OnboardingView: View {
                 }
             }
 
-            // Dönem Bilgileri
             onboardingCard(title: "Dönem Bilgileri", icon: "calendar") {
                 VStack(spacing: AppSpacing.medium) {
                     VStack(alignment: .leading, spacing: AppSpacing.small) {
@@ -110,7 +121,6 @@ struct OnboardingView: View {
                 }
             }
 
-            // Tarih Seçimi
             onboardingCard(title: "Dönem Tarihleri", icon: "calendar.badge.clock") {
                 VStack(spacing: AppSpacing.small) {
                     HStack {
@@ -150,7 +160,6 @@ struct OnboardingView: View {
                 }
             }
 
-            // Özet
             summaryCard
         }
         .frame(maxWidth: 450)
@@ -173,9 +182,7 @@ struct OnboardingView: View {
                 summaryRow(
                     label: "Bitiş:",
                     value: endDate.formatted(date: .abbreviated, time: .omitted))
-                summaryRow(
-                    label: "Süre:",
-                    value: durationText)
+                summaryRow(label: "Süre:", value: durationText)
             }
             .padding(10)
             .background(AppColors.primary.opacity(0.05))
@@ -196,12 +203,19 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Start Button
+    // MARK: - Next Button
 
-    private var startButton: some View {
-        Button(action: createSemester) {
+    private var nextButton: some View {
+        NavigationLink {
+            PeriodSetupView(
+                semesterName: generatedSemesterName,
+                startDate: startDate,
+                endDate: endDate,
+                onComplete: saveSemester
+            )
+        } label: {
             HStack {
-                Text("Başlayalım")
+                Text("Devam Et")
                     .fontWeight(.bold)
                 Image(systemName: "arrow.right")
             }
@@ -218,7 +232,6 @@ struct OnboardingView: View {
         .disabled(!isFormValid)
         .frame(maxWidth: 450)
         .padding(.horizontal)
-        .padding(.bottom, AppSpacing.large)
     }
 
     // MARK: - Helpers
@@ -313,33 +326,26 @@ struct OnboardingView: View {
     private static func currentAcademicYear() -> String {
         let year = Calendar.current.component(.year, from: Date())
         let month = Calendar.current.component(.month, from: Date())
-        // Eylül ve sonrası → yeni dönem başlangıcı
         let startYear = month >= 9 ? year : year - 1
         return "\(startYear)-\(startYear + 1)"
     }
 
     // MARK: - Save
 
-    private func createSemester() {
+    private func saveSemester(periods: [PeriodDefinition]) {
         let semester = Semester(
             name: generatedSemesterName,
             startDate: startDate,
             endDate: endDate,
             weekendRule: .saturdaySunday,
-            isActive: false  // sheet kapanana kadar aktif değil
+            isActive: true
         )
-
         MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
-        pendingSemester = semester
-        showingPeriodSetup = true
-    }
-
-    private func finalizeSemester() {
-        guard let semester = pendingSemester else { return }
-        semester.isActive = true
         modelContext.insert(semester)
-        modelContext.saveResult("OnboardingView: finalizeSemester failed")
-        pendingSemester = nil
+        for period in periods {
+            modelContext.insert(period)
+        }
+        modelContext.saveResult("OnboardingView: saveSemester failed")
     }
 }
 
