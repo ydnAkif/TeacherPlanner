@@ -68,7 +68,7 @@ struct CourseDetailView: View {
             EditCourseView(course: course)
         }
         .sheet(isPresented: $showingAddSession) {
-            EditClassSessionView(weekday: 2, period: nil)
+            EditClassSessionView(course: course)
         }
         .alert("Dersi Sil", isPresented: $showingDeleteAlert) {
             Button("İptal", role: .cancel) {}
