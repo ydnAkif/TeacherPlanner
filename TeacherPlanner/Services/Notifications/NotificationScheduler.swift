@@ -71,7 +71,7 @@ final class NotificationScheduler: NotificationScheduling {
             return (session, period)
         }
 
-        await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods)
+        await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods, on: today)
     }
 
     /// Gelecek 7 günün bildirimlerini zamanla
@@ -110,7 +110,7 @@ final class NotificationScheduler: NotificationScheduling {
                 return (session, period)
             }
 
-            await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods)
+            await notificationManager.scheduleDailyReminders(sessions: sessionsWithPeriods, on: date)
         }
     }
 

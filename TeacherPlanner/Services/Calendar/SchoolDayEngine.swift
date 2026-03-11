@@ -36,12 +36,12 @@ final class SchoolDayEngine: SchoolDayCalculating {
         }
 
         // 1. Dönem içinde mi?
-        guard semester.contains(date) else {
+        guard semester.contains(targetDate) else {
             return false
         }
 
         // 2. Hafta sonu mu?
-        let weekday = calendar.component(.weekday, from: date)
+        let weekday = calendar.component(.weekday, from: targetDate)
         if semester.weekendRule.isSkipped(weekday: weekday) {
             return false
         }
@@ -72,7 +72,7 @@ final class SchoolDayEngine: SchoolDayCalculating {
     /// Aktif dönemi bulur
     func getActiveSemester() -> Semester? {
         let descriptor = FetchDescriptor<Semester>(
-            predicate: #Predicate { $0.isActive }
+            predicate: #Predicate<Semester> { $0.isActive == true }
         )
 
         do {

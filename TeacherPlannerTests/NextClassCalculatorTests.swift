@@ -10,17 +10,30 @@ import XCTest
 
 @testable import TeacherPlanner
 
-@MainActor
 final class NextClassCalculatorTests: XCTestCase {
+    var container: ModelContainer!
     var context: ModelContext!
     var schoolDayEngine: SchoolDayEngine!
 
     override func setUp() async throws {
-        let container = try await ModelContainerFactory.createPreview()
-        context = container.mainContext
-        schoolDayEngine = SchoolDayEngine(modelContext: context)
+        let newContainer = try await MainActor.run {
+            try ModelContainerFactory.createPreview()
+        }
+        await MainActor.run {
+            container = newContainer
+            context = container.mainContext
+            schoolDayEngine = SchoolDayEngine(modelContext: context)
+        }
+        try await MainActor.run {
+            try createSampleData()
+        }
+    }
 
-        try createSampleData()
+    override func tearDown() async throws {
+        await MainActor.run {
+            context = nil
+            schoolDayEngine = nil
+        }
     }
 
     func createSampleData() throws {
@@ -59,11 +72,14 @@ final class NextClassCalculatorTests: XCTestCase {
         context.insert(period2)
 
         // Salı (weekday=3) 1. ve 2. ders
-        let session1 = ClassSession(weekday: 3, periodOrder: 1, course: course, period: period1, room: "201")
-        let session2 = ClassSession(weekday: 3, periodOrder: 2, course: course, period: period2, room: "201")
+        let session1 = ClassSession(
+            weekday: 3, periodOrder: 1, course: course, period: period1, room: "201")
+        let session2 = ClassSession(
+            weekday: 3, periodOrder: 2, course: course, period: period2, room: "201")
 
         // Salı'ya ek olarak Pazartesi (weekday=2) 1. ders
-        let sessionMonday = ClassSession(weekday: 2, periodOrder: 1, course: course, period: period1, room: "101")
+        let sessionMonday = ClassSession(
+            weekday: 2, periodOrder: 1, course: course, period: period1, room: "101")
 
         context.insert(session1)
         context.insert(session2)
@@ -75,75 +91,89 @@ final class NextClassCalculatorTests: XCTestCase {
     // MARK: - Mevcut Test
 
     func testNextClassCalculation() async {
-        let calculator = NextClassCalculator(
-            modelContext: context,
-            schoolDayEngine: schoolDayEngine
-        )
+        let nextClass = await MainActor.run {
+            let calculator = NextClassCalculator(
+                modelContext: context,
+                schoolDayEngine: schoolDayEngine
+            )
+            let calendar = Calendar.current
+            let mondayMorning = calendar.date(
+                from: DateComponents(year: 2025, month: 9, day: 15, hour: 8, minute: 0))!
+            return (calculator, mondayMorning)
+        }
 
-        let calendar = Calendar.current
-        let mondayMorning = calendar.date(
-            from: DateComponents(year: 2025, month: 9, day: 15, hour: 8, minute: 0))!
+        let result = await nextClass.0.nextClass(from: nextClass.1)
 
-        let nextClass = await calculator.nextClass(from: mondayMorning)
-
-        XCTAssertNotNil(nextClass)
-        XCTAssertEqual(nextClass?.courseTitle, "Test Fen")
-        XCTAssertEqual(nextClass?.period.title, "1. Ders")
+        let (courseTitle, periodTitle) = await MainActor.run {
+            (result?.courseTitle, result?.period.title)
+        }
+        XCTAssertNotNil(result)
+        XCTAssertEqual(courseTitle, "Test Fen")
+        XCTAssertEqual(periodTitle, "1. Ders")
     }
 
     // MARK: - Yeni Testler
 
     func testNextClass_AfterLastClassOfDay() async {
-        let calculator = NextClassCalculator(
-            modelContext: context,
-            schoolDayEngine: schoolDayEngine
-        )
+        let (calculator, mondayAfterClasses) = await MainActor.run {
+            let calculator = NextClassCalculator(
+                modelContext: context,
+                schoolDayEngine: schoolDayEngine
+            )
+            let calendar = Calendar.current
+            // Pazartesi 2. dersten sonra (10:30) → Salı 1. ders olmalı
+            let date = calendar.date(
+                from: DateComponents(year: 2025, month: 9, day: 15, hour: 10, minute: 30))!
+            return (calculator, date)
+        }
 
-        let calendar = Calendar.current
-        // Pazartesi 2. dersten sonra (10:30) → Salı 1. ders olmalı
-        let mondayAfterClasses = calendar.date(
-            from: DateComponents(year: 2025, month: 9, day: 15, hour: 10, minute: 30))!
+        let result = await calculator.nextClass(from: mondayAfterClasses)
 
-        let nextClass = await calculator.nextClass(from: mondayAfterClasses)
-
-        XCTAssertNotNil(nextClass, "Pazartesi dersleri bittikten sonra Salı dersi bulunmalı")
-        XCTAssertEqual(nextClass?.period.title, "1. Ders")
+        let periodTitle = await MainActor.run { result?.period.title }
+        XCTAssertNotNil(result, "Pazartesi dersleri bittikten sonra Salı dersi bulunmalı")
+        XCTAssertEqual(periodTitle, "1. Ders")
     }
 
     func testNextClass_NoClassesInDB() async throws {
         // Tüm session'ları sil
-        let descriptor = FetchDescriptor<ClassSession>()
-        let sessions = try context.fetch(descriptor)
-        sessions.forEach { context.delete($0) }
-        try context.save()
+        try await MainActor.run {
+            let descriptor = FetchDescriptor<ClassSession>()
+            let sessions = try context.fetch(descriptor)
+            sessions.forEach { context.delete($0) }
+            try context.save()
+        }
 
-        let calculator = NextClassCalculator(
-            modelContext: context,
-            schoolDayEngine: schoolDayEngine
-        )
+        let (calculator, mondayMorning) = await MainActor.run {
+            let calculator = NextClassCalculator(
+                modelContext: context,
+                schoolDayEngine: schoolDayEngine
+            )
+            let calendar = Calendar.current
+            let date = calendar.date(
+                from: DateComponents(year: 2025, month: 9, day: 15, hour: 8, minute: 0))!
+            return (calculator, date)
+        }
 
-        let calendar = Calendar.current
-        let mondayMorning = calendar.date(
-            from: DateComponents(year: 2025, month: 9, day: 15, hour: 8, minute: 0))!
+        let result = await calculator.nextClass(from: mondayMorning)
 
-        let nextClass = await calculator.nextClass(from: mondayMorning)
-
-        XCTAssertNil(nextClass, "Session yokken nil dönmeli")
+        XCTAssertNil(result, "Session yokken nil dönmeli")
     }
 
     func testNextClass_OnWeekend_ReturnsWeekdayClass() async {
-        let calculator = NextClassCalculator(
-            modelContext: context,
-            schoolDayEngine: schoolDayEngine
-        )
+        let (calculator, sundayMorning) = await MainActor.run {
+            let calculator = NextClassCalculator(
+                modelContext: context,
+                schoolDayEngine: schoolDayEngine
+            )
+            let calendar = Calendar.current
+            // Pazar sabahı (2025-09-21) → Pazartesi dersine geçmeli
+            let date = calendar.date(
+                from: DateComponents(year: 2025, month: 9, day: 21, hour: 8, minute: 0))!
+            return (calculator, date)
+        }
 
-        let calendar = Calendar.current
-        // Pazar sabahı (2025-09-21) → Pazartesi dersine geçmeli
-        let sundayMorning = calendar.date(
-            from: DateComponents(year: 2025, month: 9, day: 21, hour: 8, minute: 0))!
+        let result = await calculator.nextClass(from: sundayMorning)
 
-        let nextClass = await calculator.nextClass(from: sundayMorning)
-
-        XCTAssertNotNil(nextClass, "Pazar'dan sonra hafta içi dersi bulunmalı")
+        XCTAssertNotNil(result, "Pazar'dan sonra hafta içi dersi bulunmalı")
     }
 }

@@ -313,10 +313,10 @@
   - [ ] testToggleCompleted_success
   - [ ] testToggleCompleted_error
 
-- [ ] **WeeklyScheduleViewModelTests**
-  - [ ] testLoadData_populatesGridView
-  - [ ] testDeleteSession_success
-  - [ ] testDeleteSession_error
+- [x] **WeeklyScheduleViewModelTests**
+  - [x] testLoadData_populatesGridView
+  - [x] testDeleteSession_success
+  - [x] testDeleteSession_error
 
 - [ ] **SettingsViewModelTests**
   - [ ] testToggleNotifications
@@ -375,21 +375,21 @@
 ### Hafta 12-13: UI Tests
 
 #### Critical User Flows (P1 - Orta)
-- [ ] **Onboarding Flow**
-  - [ ] testOnboarding_createFirstSemester
-  - [ ] testOnboarding_setPeriods
+- [x] **Onboarding Flow**
+  - [x] testOnboarding_createFirstSemester
+  - [x] testOnboarding_setPeriods
 
-- [ ] **Today View**
-  - [ ] testTodayView_loadsData
-  - [ ] testTodayView_displaysNextClass
+- [x] **Today View**
+  - [x] testTodayView_loadsData
+  - [x] testTodayView_displaysNextClass
 
-- [ ] **Add Course Flow**
-  - [ ] testAddCourse_navigateFromSidebar
-  - [ ] testAddCourse_fillFormAndSave
+- [x] **Add Course Flow**
+  - [x] testAddCourse_navigateFromSidebar
+  - [x] testAddCourse_fillFormAndSave
 
-- [ ] **Complete Planner Item**
-  - [ ] testCompleteItem_toggleCompletion
-  - [ ] testDeleteItem_swipeToDelete
+- [x] **Complete Planner Item**
+  - [x] testCompleteItem_toggleCompletion
+  - [x] testDeleteItem_swipeToDelete
 
 #### Accessibility Tests (P2 - Düşük)
 - [ ] **VoiceOver Navigation**

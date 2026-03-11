@@ -28,43 +28,43 @@ final class AppEnvironment {
         let engine = SchoolDayEngine(modelContext: modelContext)
         self.schoolDayEngine = engine
         self.notificationManager = NotificationManager()
-        
+
         let nextClass = NextClassCalculator(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
         self.nextClassCalculator = nextClass
-        
+
         let todaySchedule = TodayScheduleProvider(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
         self.todayScheduleProvider = todaySchedule
-        
+
         let courseRepo = CourseRepository(modelContext: modelContext)
         let semesterRepo = SemesterRepository(modelContext: modelContext)
         self.courseRepository = courseRepo
         self.semesterRepository = semesterRepo
-        
+
         let plannerRepo = PlannerRepository(modelContext: modelContext)
         self.plannerRepository = plannerRepo
-        
+
         let sched = NotificationScheduler(
             modelContext: modelContext,
             schoolDayEngine: engine,
             notificationManager: notificationManager
         )
         self.notificationScheduler = sched
-        
+
         self.todayOverviewUseCase = TodayOverviewUseCase(
             schoolDayEngine: engine,
             nextClassCalculator: nextClass,
             todayScheduleProvider: todaySchedule
         )
-        
+
         self.plannerTaskUseCase = PlannerTaskUseCase(repository: plannerRepo)
         self.notificationUseCase = NotificationUseCase(scheduler: sched)
-        
+
         self.router = AppRouter()
         self.weeklyScheduleBuilder = WeeklyScheduleBuilder(modelContext: modelContext)
     }
@@ -73,5 +73,5 @@ final class AppEnvironment {
 // MARK: - Environment
 extension EnvironmentValues {
     @Entry var appEnvironment: AppEnvironment?
+    @Entry var isUITesting: Bool = false
 }
-

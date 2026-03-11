@@ -22,10 +22,11 @@ struct ModelContainerFactory {
         let sharedStoreURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier
         )?.appendingPathComponent("TeacherPlanner.sqlite")
-        
+
         // Fallback for tests or missing entitlements
-        let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("TeacherPlanner.sqlite")
-        
+        let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            .first!.appendingPathComponent("TeacherPlanner.sqlite")
+
         let configuration = ModelConfiguration(
             schema: schema,
             url: sharedStoreURL ?? fallbackURL,
@@ -59,21 +60,28 @@ struct ModelContainerFactory {
         let sharedStoreURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier
         )?.appendingPathComponent("TeacherPlanner.sqlite")
-        
-        let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("TeacherPlanner.sqlite")
-        
+
+        let fallbackURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            .first!.appendingPathComponent("TeacherPlanner.sqlite")
+
         let urls = [sharedStoreURL, fallbackURL].compactMap { $0 }
-        
+
         for url in urls {
             let shmURL = url.deletingPathExtension().appendingPathExtension("sqlite-shm")
             let walURL = url.deletingPathExtension().appendingPathExtension("sqlite-wal")
-            
-            do { try FileManager.default.removeItem(at: url) }
-            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
-            do { try FileManager.default.removeItem(at: shmURL) }
-            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
-            do { try FileManager.default.removeItem(at: walURL) }
-            catch { AppLogger.warning("ModelContainerFactory: removeItem failed: \(error.localizedDescription)") }
+
+            do { try FileManager.default.removeItem(at: url) } catch {
+                AppLogger.warning(
+                    "ModelContainerFactory: removeItem failed: \(error.localizedDescription)")
+            }
+            do { try FileManager.default.removeItem(at: shmURL) } catch {
+                AppLogger.warning(
+                    "ModelContainerFactory: removeItem failed: \(error.localizedDescription)")
+            }
+            do { try FileManager.default.removeItem(at: walURL) } catch {
+                AppLogger.warning(
+                    "ModelContainerFactory: removeItem failed: \(error.localizedDescription)")
+            }
         }
         Logger.info("ModelContainerFactory: Tüm veriler temizlendi.")
     }

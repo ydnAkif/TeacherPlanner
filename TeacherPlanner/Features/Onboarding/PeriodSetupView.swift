@@ -29,6 +29,7 @@ struct PeriodSetupView: View {
                     }
                 }
             }
+            .accessibilityIdentifier("period_setup_list")
             .navigationTitle("Ders Saatleri")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -36,6 +37,7 @@ struct PeriodSetupView: View {
                         savePeriods()
                         dismiss()
                     }
+                    .accessibilityIdentifier("period_setup_defaults_button")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -43,6 +45,7 @@ struct PeriodSetupView: View {
                         savePeriods()
                         dismiss()
                     }
+                    .accessibilityIdentifier("period_setup_done_button")
                 }
             }
             .onAppear {

@@ -10,33 +10,48 @@ import SwiftUI
 
 @main
 struct TeacherPlannerApp: App {
-    let container: ModelContainer
+    @State private var container: ModelContainer?
     @State private var appEnvironment: AppEnvironment?
 
-    init() {
-        // TEMPORARY: Verileri temizlemek için alttaki satırı bir kez çalıştırıp sonra yorum satırı yapın
-        // ModelContainerFactory.eraseAllData()
+    static var isUITesting: Bool {
+        CommandLine.arguments.contains("--uitesting")
+    }
 
-        do {
-            container = try ModelContainerFactory.create()
-
-            // Sample data yükle (ilk açılışta)
-            // try SampleDataSeeder.seed(container)
-        } catch {
-            fatalError("Model container oluşturulamadı: \(error)")
-        }
+    static var shouldSeedData: Bool {
+        CommandLine.arguments.contains("--seed-data")
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .modelContainer(container)
-                .task {
-                    if appEnvironment == nil {
-                        appEnvironment = AppEnvironment(modelContext: container.mainContext)
-                    }
+            Group {
+                if let container, let appEnvironment {
+                    RootView()
+                        .modelContainer(container)
+                        .environment(\.appEnvironment, appEnvironment)
+                        .environment(\.isUITesting, Self.isUITesting)
+                } else {
+                    ProgressView()
                 }
-                .environment(\.appEnvironment, appEnvironment)
+            }
+            .task {
+                guard container == nil else { return }
+                do {
+                    let newContainer: ModelContainer
+                    if Self.isUITesting {
+                        newContainer = try ModelContainerFactory.createPreview()
+                    } else {
+                        newContainer = try ModelContainerFactory.create()
+                    }
+                    container = newContainer
+                    appEnvironment = AppEnvironment(modelContext: newContainer.mainContext)
+                    
+                    if Self.shouldSeedData {
+                        try SampleDataSeeder.seed(newContainer)
+                    }
+                } catch {
+                    fatalError("Model container oluşturulamadı: \(error)")
+                }
+            }
         }
     }
 }

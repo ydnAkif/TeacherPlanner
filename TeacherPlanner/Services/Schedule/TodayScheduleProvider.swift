@@ -106,23 +106,21 @@ class TodayScheduleProvider: TodayScheduleProviding {
         let sessions = await todayClassesWithPeriods(semester: semester)
 
         for (_, period) in sessions {
-            let periodHour = calendar.component(.hour, from: period.startTime)
-            let periodMinute = calendar.component(.minute, from: period.startTime)
+            let startHour = calendar.component(.hour, from: period.startTime)
+            let startMinute = calendar.component(.minute, from: period.startTime)
 
-            var startDate =
-                calendar.date(
-                    bySettingHour: periodHour,
-                    minute: periodMinute,
+            guard
+                let startDate = calendar.date(
+                    bySettingHour: startHour,
+                    minute: startMinute,
                     second: 0,
                     of: now
-                ) ?? now
+                )
+            else { continue }
 
-            // Eğer ders geçmişse, yarınki aynı saat
-            if startDate < now {
-                startDate = calendar.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+            if startDate > now {
+                return startDate.timeIntervalSince(now)
             }
-
-            return startDate.timeIntervalSince(now)
         }
 
         return nil

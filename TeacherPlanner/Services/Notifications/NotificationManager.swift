@@ -85,21 +85,31 @@ final class NotificationManager {
     }
 
     /// Günlük ders bildirimlerini zamanla
-    func scheduleDailyReminders(sessions: [(session: ClassSession, period: PeriodDefinition)]) async
-    {
+    func scheduleDailyReminders(
+        sessions: [(session: ClassSession, period: PeriodDefinition)],
+        on date: Date,
+        minutesBefore: Int? = nil
+    ) async {
+        let minutesBefore = minutesBefore ?? Constants.Notification.defaultReminderMinutesBefore
+        let calendar = Calendar.current
+
         for (session, period) in sessions {
             guard let course = session.course else { continue }
-
-            let identifier = "class_\(session.id.uuidString)"
-
-            // Ders başlamadan 15 dakika önce
             guard
-                let reminderTime = Calendar.current.date(
-                    byAdding: .minute,
-                    value: -15,
-                    to: period.startTime
+                let reminderTime = Self.reminderDate(
+                    for: period,
+                    on: date,
+                    minutesBefore: minutesBefore,
+                    calendar: calendar
                 )
             else { continue }
+            guard reminderTime > Date() else { continue }
+
+            let identifier = Self.reminderIdentifier(
+                for: session.id,
+                on: date,
+                calendar: calendar
+            )
 
             await scheduleClassReminder(
                 courseName: course.title,
@@ -107,5 +117,38 @@ final class NotificationManager {
                 identifier: identifier
             )
         }
+    }
+
+    static func reminderDate(
+        for period: PeriodDefinition,
+        on date: Date,
+        minutesBefore: Int,
+        calendar: Calendar = .current
+    ) -> Date? {
+        let startHour = calendar.component(.hour, from: period.startTime)
+        let startMinute = calendar.component(.minute, from: period.startTime)
+        guard
+            let classStart = calendar.date(
+                bySettingHour: startHour,
+                minute: startMinute,
+                second: 0,
+                of: date
+            )
+        else { return nil }
+
+        return calendar.date(byAdding: .minute, value: -minutesBefore, to: classStart)
+    }
+
+    static func reminderIdentifier(
+        for sessionID: UUID,
+        on date: Date,
+        calendar: Calendar = .current
+    ) -> String {
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        let year = components.year ?? 0
+        let month = components.month ?? 0
+        let day = components.day ?? 0
+        let dateKey = String(format: "%04d%02d%02d", year, month, day)
+        return "class_\(sessionID.uuidString)_\(dateKey)"
     }
 }

@@ -18,7 +18,7 @@ struct SharedWidgetData: Codable {
     let itemsCount: Int
     
     static func readFromAppGroup() -> SharedWidgetData? {
-        let identifier = "group.com.teacherplanner.shared"
+        let identifier = "group.com.ydnakif.TeacherPlanner.shared"
         guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier) else { return nil }
         let fileURL = container.appendingPathComponent("widget_summary.json")
         guard let data = try? Data(contentsOf: fileURL) else { return nil }

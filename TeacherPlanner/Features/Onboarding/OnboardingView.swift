@@ -51,6 +51,7 @@ struct OnboardingView: View {
                             VStack(spacing: AppSpacing.xxSmall) {
                                 Text("Hoş Geldiniz")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .accessibilityIdentifier("onboarding_welcome_text")
                                 
                                 Text("Öğretmen Planlayıcı ile derslerinizi organize edin")
                                     .font(.subheadline)
@@ -157,6 +158,7 @@ struct OnboardingView: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(!isFormValid)
+                        .accessibilityIdentifier("onboarding_start_button")
                         .frame(maxWidth: 450)
                         .padding(.horizontal)
                         .padding(.bottom, AppSpacing.large)
