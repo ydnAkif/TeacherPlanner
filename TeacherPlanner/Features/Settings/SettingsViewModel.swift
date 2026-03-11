@@ -42,7 +42,6 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Dependencies
     private var modelContext: ModelContext?
-    private var notificationUseCase: (any NotificationUseCaseProtocol)?
     private var scheduler: (any NotificationScheduling)?
 
     init() {
@@ -61,11 +60,9 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Setup
     func setup(
         modelContext: ModelContext,
-        notificationUseCase: any NotificationUseCaseProtocol,
         scheduler: any NotificationScheduling
     ) {
         self.modelContext = modelContext
-        self.notificationUseCase = notificationUseCase
         self.scheduler = scheduler
     }
 

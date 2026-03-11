@@ -58,20 +58,3 @@ protocol NotificationScheduling {
     func cancelAllNotifications() async
     func requestPermission() async -> Bool
 }
-
-// MARK: - Use Cases
-
-/// Planner item işlemleri için Use Case
-@MainActor
-protocol PlannerTaskUseCaseProtocol {
-    func toggleCompleted(_ item: PlannerItem) async -> Result<Void, AppError>
-    func deleteItem(_ item: PlannerItem) async -> Result<Void, AppError>
-    func fetchTodayItems() async -> Result<[PlannerItem], AppError>
-}
-
-/// Bildirim işlemleri için Use Case
-@MainActor
-protocol NotificationUseCaseProtocol {
-    func rescheduleNotifications() async
-    func updateReminderSettings(enabled: Bool, minutesBefore: Int) async
-}

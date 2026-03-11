@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5EB744542F5F52DD0078A3DE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB744532F5F52DD0078A3DE /* WidgetKit.framework */; };
-		5EB744562F5F52DD0078A3DE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB744552F5F52DD0078A3DE /* SwiftUI.framework */; };
-		5EB744632F5F52DF0078A3DE /* TeacherPlannerWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5EB744512F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,37 +24,15 @@
 			remoteGlobalIDString = 5EB743572F5F23620078A3DE;
 			remoteInfo = TeacherPlanner;
 		};
-		5EB744612F5F52DF0078A3DE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5EB743502F5F23620078A3DE /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5EB744502F5F52DC0078A3DE;
-			remoteInfo = TeacherPlannerWidgetsExtension;
-		};
+
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		5EB744682F5F52DF0078A3DE /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				5EB744632F5F52DF0078A3DE /* TeacherPlannerWidgetsExtension.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
+
 
 /* Begin PBXFileReference section */
-		5E56D8E72F60240800550C03 /* TeacherPlannerWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TeacherPlannerWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		5EB743582F5F23620078A3DE /* TeacherPlanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TeacherPlanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EB743672F5F23650078A3DE /* TeacherPlannerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TeacherPlannerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EB743712F5F23650078A3DE /* TeacherPlannerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TeacherPlannerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		5EB744512F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TeacherPlannerWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		5EB744532F5F52DD0078A3DE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
-		5EB744552F5F52DD0078A3DE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -67,13 +42,6 @@
 				Persistence/PreviewContainer.swift,
 			);
 			target = 5EB743572F5F23620078A3DE /* TeacherPlanner */;
-		};
-		5EB744672F5F52DF0078A3DE /* Exceptions for "TeacherPlannerWidgets" folder in "TeacherPlannerWidgetsExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 5EB744502F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -94,14 +62,6 @@
 		5EB743742F5F23650078A3DE /* TeacherPlannerUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = TeacherPlannerUITests;
-			sourceTree = "<group>";
-		};
-		5EB744572F5F52DD0078A3DE /* TeacherPlannerWidgets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				5EB744672F5F52DF0078A3DE /* Exceptions for "TeacherPlannerWidgets" folder in "TeacherPlannerWidgetsExtension" target */,
-			);
-			path = TeacherPlannerWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -128,27 +88,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5EB7444E2F5F52DC0078A3DE /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				5EB744562F5F52DD0078A3DE /* SwiftUI.framework in Frameworks */,
-				5EB744542F5F52DD0078A3DE /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		5EB7434F2F5F23620078A3DE = {
 			isa = PBXGroup;
 			children = (
-				5E56D8E72F60240800550C03 /* TeacherPlannerWidgetsExtension.entitlements */,
 				5EB7435A2F5F23620078A3DE /* TeacherPlanner */,
 				5EB7436A2F5F23650078A3DE /* TeacherPlannerTests */,
 				5EB743742F5F23650078A3DE /* TeacherPlannerUITests */,
-				5EB744572F5F52DD0078A3DE /* TeacherPlannerWidgets */,
-				5EB744522F5F52DD0078A3DE /* Frameworks */,
 				5EB743592F5F23620078A3DE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -159,18 +107,8 @@
 				5EB743582F5F23620078A3DE /* TeacherPlanner.app */,
 				5EB743672F5F23650078A3DE /* TeacherPlannerTests.xctest */,
 				5EB743712F5F23650078A3DE /* TeacherPlannerUITests.xctest */,
-				5EB744512F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension.appex */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		5EB744522F5F52DD0078A3DE /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				5EB744532F5F52DD0078A3DE /* WidgetKit.framework */,
-				5EB744552F5F52DD0078A3DE /* SwiftUI.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -183,12 +121,10 @@
 				5EB743542F5F23620078A3DE /* Sources */,
 				5EB743552F5F23620078A3DE /* Frameworks */,
 				5EB743562F5F23620078A3DE /* Resources */,
-				5EB744682F5F52DF0078A3DE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				5EB744622F5F52DF0078A3DE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5EB7435A2F5F23620078A3DE /* TeacherPlanner */,
@@ -246,28 +182,7 @@
 			productReference = 5EB743712F5F23650078A3DE /* TeacherPlannerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		5EB744502F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 5EB744642F5F52DF0078A3DE /* Build configuration list for PBXNativeTarget "TeacherPlannerWidgetsExtension" */;
-			buildPhases = (
-				5EB7444D2F5F52DC0078A3DE /* Sources */,
-				5EB7444E2F5F52DC0078A3DE /* Frameworks */,
-				5EB7444F2F5F52DC0078A3DE /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				5EB744572F5F52DD0078A3DE /* TeacherPlannerWidgets */,
-			);
-			name = TeacherPlannerWidgetsExtension;
-			packageProductDependencies = (
-			);
-			productName = TeacherPlannerWidgetsExtension;
-			productReference = 5EB744512F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
+
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -289,9 +204,6 @@
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = 5EB743572F5F23620078A3DE;
 					};
-					5EB744502F5F52DC0078A3DE = {
-						CreatedOnToolsVersion = 26.3;
-					};
 				};
 			};
 			buildConfigurationList = 5EB743532F5F23620078A3DE /* Build configuration list for PBXProject "TeacherPlanner" */;
@@ -311,7 +223,6 @@
 				5EB743572F5F23620078A3DE /* TeacherPlanner */,
 				5EB743662F5F23650078A3DE /* TeacherPlannerTests */,
 				5EB743702F5F23650078A3DE /* TeacherPlannerUITests */,
-				5EB744502F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -332,13 +243,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		5EB7436F2F5F23650078A3DE /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5EB7444F2F5F52DC0078A3DE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -369,13 +273,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5EB7444D2F5F52DC0078A3DE /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -389,11 +286,7 @@
 			target = 5EB743572F5F23620078A3DE /* TeacherPlanner */;
 			targetProxy = 5EB743722F5F23650078A3DE /* PBXContainerItemProxy */;
 		};
-		5EB744622F5F52DF0078A3DE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 5EB744502F5F52DC0078A3DE /* TeacherPlannerWidgetsExtension */;
-			targetProxy = 5EB744612F5F52DF0078A3DE /* PBXContainerItemProxy */;
-		};
+
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -705,94 +598,6 @@
 			};
 			name = Release;
 		};
-		5EB744652F5F52DF0078A3DE /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = TeacherPlannerWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3A8GAM82MT;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TeacherPlannerWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TeacherPlannerWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ydnakif.TeacherPlanner.TeacherPlannerWidgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.2;
-			};
-			name = Debug;
-		};
-		5EB744662F5F52DF0078A3DE /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = TeacherPlannerWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3A8GAM82MT;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TeacherPlannerWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TeacherPlannerWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ydnakif.TeacherPlanner.TeacherPlannerWidgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.2;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -832,15 +637,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5EB744642F5F52DF0078A3DE /* Build configuration list for PBXNativeTarget "TeacherPlannerWidgetsExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				5EB744652F5F52DF0078A3DE /* Debug */,
-				5EB744662F5F52DF0078A3DE /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+
 /* End XCConfigurationList section */
 	};
 	rootObject = 5EB743502F5F23620078A3DE /* Project object */;

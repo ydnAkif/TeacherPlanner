@@ -3,25 +3,21 @@ import SwiftData
 import SwiftUI
 
 /// Uygulamanın merkezi Dependency Injection konteyneri.
-/// Tüm servisler protokol tipleriyle tutularak test edilebilirlik sağlanır.
 @MainActor
 @Observable
 final class AppEnvironment {
 
-    // MARK: - Services (Protocol Types)
+    // MARK: - Services
     let schoolDayEngine: any SchoolDayCalculating
     let notificationManager: NotificationManager
     let nextClassCalculator: any NextClassProviding
     let todayScheduleProvider: any TodayScheduleProviding
     let weeklyScheduleBuilder: any WeeklyScheduleBuilding
-    let todayOverviewUseCase: any TodayOverviewUseCaseProtocol
     let plannerRepository: any PlannerRepositoryProtocol
-    let router: AppRouter
     let courseRepository: any CourseRepositoryProtocol
     let semesterRepository: any SemesterRepositoryProtocol
-    let plannerTaskUseCase: any PlannerTaskUseCaseProtocol
-    let notificationUseCase: any NotificationUseCaseProtocol
     let notificationScheduler: any NotificationScheduling
+    let router: AppRouter
 
     // MARK: - Init
     init(modelContext: ModelContext) {
@@ -29,25 +25,19 @@ final class AppEnvironment {
         self.schoolDayEngine = engine
         self.notificationManager = NotificationManager()
 
-        let nextClass = NextClassCalculator(
+        self.nextClassCalculator = NextClassCalculator(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
-        self.nextClassCalculator = nextClass
 
-        let todaySchedule = TodayScheduleProvider(
+        self.todayScheduleProvider = TodayScheduleProvider(
             modelContext: modelContext,
             schoolDayEngine: engine
         )
-        self.todayScheduleProvider = todaySchedule
 
-        let courseRepo = CourseRepository(modelContext: modelContext)
-        let semesterRepo = SemesterRepository(modelContext: modelContext)
-        self.courseRepository = courseRepo
-        self.semesterRepository = semesterRepo
-
-        let plannerRepo = PlannerRepository(modelContext: modelContext)
-        self.plannerRepository = plannerRepo
+        self.courseRepository = CourseRepository(modelContext: modelContext)
+        self.semesterRepository = SemesterRepository(modelContext: modelContext)
+        self.plannerRepository = PlannerRepository(modelContext: modelContext)
 
         let sched = NotificationScheduler(
             modelContext: modelContext,
@@ -55,15 +45,6 @@ final class AppEnvironment {
             notificationManager: notificationManager
         )
         self.notificationScheduler = sched
-
-        self.todayOverviewUseCase = TodayOverviewUseCase(
-            schoolDayEngine: engine,
-            nextClassCalculator: nextClass,
-            todayScheduleProvider: todaySchedule
-        )
-
-        self.plannerTaskUseCase = PlannerTaskUseCase(repository: plannerRepo)
-        self.notificationUseCase = NotificationUseCase(scheduler: sched)
 
         self.router = AppRouter()
         self.weeklyScheduleBuilder = WeeklyScheduleBuilder(modelContext: modelContext)

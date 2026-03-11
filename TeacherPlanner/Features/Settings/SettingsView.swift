@@ -94,7 +94,6 @@ struct SettingsView: View {
                 if let env = appEnvironment {
                     viewModel.setup(
                         modelContext: modelContext,
-                        notificationUseCase: env.notificationUseCase,
                         scheduler: env.notificationScheduler
                     )
                 }

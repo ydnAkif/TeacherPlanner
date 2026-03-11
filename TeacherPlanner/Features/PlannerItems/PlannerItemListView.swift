@@ -33,7 +33,7 @@ struct PlannerItemListView: View {
             .errorAlert(error: $viewModel.appError)
             .onAppear {
                 if let env = appEnvironment {
-                    viewModel.setup(useCase: env.plannerTaskUseCase)
+                    viewModel.setup(repository: env.plannerRepository)
                 }
             }
         }

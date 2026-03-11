@@ -20,11 +20,11 @@ final class PlannerItemsViewModel: ObservableObject {
     @Published var appError: AppError?
 
     // MARK: - Dependencies
-    private var useCase: (any PlannerTaskUseCaseProtocol)?
+    private var repository: (any PlannerRepositoryProtocol)?
 
     // MARK: - Setup
-    func setup(useCase: any PlannerTaskUseCaseProtocol) {
-        self.useCase = useCase
+    func setup(repository: any PlannerRepositoryProtocol) {
+        self.repository = repository
     }
 
     // MARK: - Filtering
@@ -39,9 +39,9 @@ final class PlannerItemsViewModel: ObservableObject {
 
     // MARK: - Actions
     func toggleCompleted(_ item: PlannerItem) {
-        guard let useCase = useCase else { return }
+        guard let repo = repository else { return }
         Task {
-            let result = await useCase.toggleCompleted(item)
+            let result = await repo.toggleCompleted(item)
             if case .failure(let error) = result {
                 appError = error
             }
@@ -49,9 +49,9 @@ final class PlannerItemsViewModel: ObservableObject {
     }
 
     func deleteItem(_ item: PlannerItem) {
-        guard let useCase = useCase else { return }
+        guard let repo = repository else { return }
         Task {
-            let result = await useCase.deleteItem(item)
+            let result = await repo.delete(item)
             if case .failure(let error) = result {
                 appError = error
             }
@@ -59,11 +59,11 @@ final class PlannerItemsViewModel: ObservableObject {
     }
 
     func deleteSelected(from items: [PlannerItem]) {
-        guard let useCase = useCase else { return }
+        guard let repo = repository else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
         Task {
             for item in selected {
-                let result = await useCase.deleteItem(item)
+                let result = await repo.delete(item)
                 if case .failure(let error) = result {
                     appError = error
                     return
@@ -74,11 +74,11 @@ final class PlannerItemsViewModel: ObservableObject {
     }
 
     func completeSelected(from items: [PlannerItem]) {
-        guard let useCase = useCase else { return }
+        guard let repo = repository else { return }
         let selected = items.filter { selectedItems.contains($0.id) }
         Task {
             for item in selected {
-                let result = await useCase.toggleCompleted(item)
+                let result = await repo.toggleCompleted(item)
                 if case .failure(let error) = result {
                     appError = error
                     return

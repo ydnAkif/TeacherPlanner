@@ -29,9 +29,10 @@ struct TodayView: View {
             .task {
                 if let env = appEnvironment {
                     await viewModel.setup(
-                        modelContext: modelContext,
-                        overviewUseCase: env.todayOverviewUseCase,
-                        taskUseCase: env.plannerTaskUseCase
+                        schoolDayEngine: env.schoolDayEngine,
+                        nextClassCalculator: env.nextClassCalculator,
+                        todayScheduleProvider: env.todayScheduleProvider,
+                        plannerRepository: env.plannerRepository
                     )
                 }
             }

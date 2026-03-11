@@ -1,10 +1,3 @@
-//
-//  TodayViewModel.swift
-//  TeacherPlanner
-//
-//  Created by Akif AYDIN on 9.03.2026.
-//
-
 import Combine
 import Foundation
 import SwiftData
@@ -13,11 +6,10 @@ import SwiftUI
 /// Today ekranı için ViewModel
 @MainActor
 final class TodayViewModel: ObservableObject {
-    private var modelContext: ModelContext?
-    private var taskUseCase: (any PlannerTaskUseCaseProtocol)?
-
-    // Use Case
-    private var overviewUseCase: (any TodayOverviewUseCaseProtocol)?
+    private var plannerRepository: (any PlannerRepositoryProtocol)?
+    private var schoolDayEngine: (any SchoolDayCalculating)?
+    private var nextClassCalculator: (any NextClassProviding)?
+    private var todayScheduleProvider: (any TodayScheduleProviding)?
 
     // State
     @Published var activeSemester: Semester?
@@ -29,49 +21,69 @@ final class TodayViewModel: ObservableObject {
     @Published var isInitialized: Bool = false
     @Published var appError: AppError?
 
-
     init() {}
-    
+
     func setup(
-        modelContext: ModelContext,
-        overviewUseCase: any TodayOverviewUseCaseProtocol,
-        taskUseCase: any PlannerTaskUseCaseProtocol
+        schoolDayEngine: any SchoolDayCalculating,
+        nextClassCalculator: any NextClassProviding,
+        todayScheduleProvider: any TodayScheduleProviding,
+        plannerRepository: any PlannerRepositoryProtocol
     ) async {
         guard !isInitialized else { return }
-        
-        self.modelContext = modelContext
-        self.overviewUseCase = overviewUseCase
-        self.taskUseCase = taskUseCase
-        
+
+        self.schoolDayEngine = schoolDayEngine
+        self.nextClassCalculator = nextClassCalculator
+        self.todayScheduleProvider = todayScheduleProvider
+        self.plannerRepository = plannerRepository
+
         self.isInitialized = true
         await loadData()
     }
 
     /// Verileri yükle
     func loadData() async {
-        guard isInitialized, let useCase = overviewUseCase else { return }
-              
+        guard isInitialized,
+              let engine = schoolDayEngine,
+              let nextCalc = nextClassCalculator,
+              let scheduleProvider = todayScheduleProvider else { return }
+
         isLoading = true
         appError = nil
 
-        let data = await useCase.execute()
-        
-        activeSemester = data.activeSemester
-        nextClassResult = data.nextClass
-        todayClasses = data.todayClasses
-        currentClass = data.currentClass
+        let today = Date()
+        let semester = engine.getActiveSemester()
+        activeSemester = semester
 
-        // Bugünkü planner itemları al
+        guard let semester else {
+            nextClassResult = nil
+            todayClasses = []
+            currentClass = nil
+            isLoading = false
+            await loadTodayPlannerItems()
+            return
+        }
+
+        let isInstructionalDay = engine.isInstructionalDay(today, semester: semester)
+
+        if isInstructionalDay {
+            todayClasses = await scheduleProvider.todayClassesWithPeriods(semester: semester)
+            currentClass = await scheduleProvider.currentClass(semester: semester)
+        } else {
+            todayClasses = []
+            currentClass = nil
+        }
+
+        nextClassResult = await nextCalc.nextClass(from: today, semester: semester)
+
         await loadTodayPlannerItems()
-
         isLoading = false
     }
 
     /// Bugünkü planner itemları yükle
     private func loadTodayPlannerItems() async {
-        guard let useCase = taskUseCase else { return }
-        
-        let result = await useCase.fetchTodayItems()
+        guard let repo = plannerRepository else { return }
+
+        let result = await repo.fetchTodayItems()
         todayPlannerItems = result.get(or: [])
         if case .failure(let error) = result {
             appError = error
@@ -80,10 +92,10 @@ final class TodayViewModel: ObservableObject {
 
     /// Tamamlanma durumunu toggle et
     func toggleCompleted(_ item: PlannerItem) {
-        guard let useCase = taskUseCase else { return }
-        
+        guard let repo = plannerRepository else { return }
+
         Task {
-            let result = await useCase.toggleCompleted(item)
+            let result = await repo.toggleCompleted(item)
             if case .failure(let error) = result {
                 appError = error
                 return
