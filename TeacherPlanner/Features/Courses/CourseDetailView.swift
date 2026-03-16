@@ -19,6 +19,8 @@ struct CourseDetailView: View {
     @State private var showingAddSession = false
     @State private var isLoading = true
     @State private var appError: AppError?
+    @State private var plannerItemToEdit: PlannerItem?
+    @State private var showingAddPlannerItem = false
 
     var body: some View {
         ScrollView {
@@ -179,22 +181,43 @@ struct CourseDetailView: View {
 
     private var plannerItemsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("İlgili Görevler")
-                .font(.headline)
-                .padding(.horizontal)
+            HStack {
+                Text("İlgili Görevler")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                Spacer()
+
+                Button(action: { showingAddPlannerItem = true }) {
+                    Label("Ekle", systemImage: "plus.circle")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+                .padding(.trailing, 16)
+            }
 
             if course.plannerItems.isEmpty {
-                Text("Bu derse ait görev yok")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
+                HStack {
+                    Image(systemName: "checkmark.circle")
+                        .foregroundStyle(.secondary)
+                    Text("Bu derse ait görev yok")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
             } else {
+                let sorted = course.plannerItems.sorted { $0.createdAt > $1.createdAt }
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(course.plannerItems.sorted { $0.createdAt > $1.createdAt }) { item in
-                        PlannerItemRow(item: item, onToggle: {})
-                            .padding(.horizontal)
+                    ForEach(sorted) { item in
+                        PlannerItemRow(
+                            item: item,
+                            onToggle: { togglePlannerItem(item) }
+                        )
+                        .padding(.horizontal)
+                        .contentShape(Rectangle())
+                        .onTapGesture { plannerItemToEdit = item }
 
-                        if item.id != course.plannerItems.last?.id {
+                        if item.id != sorted.last?.id {
                             Divider()
                                 .padding(.horizontal)
                         }
@@ -206,6 +229,19 @@ struct CourseDetailView: View {
                 .padding(.horizontal)
             }
         }
+        .sheet(item: $plannerItemToEdit) { item in
+            EditPlannerItemView(item: item)
+        }
+        .sheet(isPresented: $showingAddPlannerItem) {
+            EditPlannerItemView(type: .task)
+        }
+    }
+
+    private func togglePlannerItem(_ item: PlannerItem) {
+        item.completed.toggle()
+        modelContext
+            .saveResult("CourseDetailView: togglePlannerItem failed")
+            .onFailure { appError = $0 }
     }
 
     private func deleteCourse() {

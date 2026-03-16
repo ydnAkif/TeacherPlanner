@@ -8,6 +8,13 @@
 import Foundation
 import SwiftData
 
+/// Thread-safe veri taşıyıcısı — SwiftData bağımsız, arka plan thread'inde kullanılabilir.
+struct SkippedDayData: Sendable {
+    let date: Date
+    let reason: String
+    let type: SkipType
+}
+
 /// MEB 2025-2026 eğitim yılı preset sağlayıcı
 /// Ara tatiller ve dönem tarihlerini içerir
 struct MEBPresetProvider {
@@ -32,77 +39,110 @@ struct MEBPresetProvider {
     }()
 
     /// 2025-2026 Ara Tatiller
-    static func getSemesterBreaks() -> [(start: Date, end: Date, name: String)] {
+    nonisolated static func getSemesterBreaks() -> [(start: Date, end: Date, name: String)] {
         let calendar = Calendar.current
         var breaks: [(start: Date, end: Date, name: String)] = []
 
         // Güz Dönemi Ara Tatili (15 Kasım 2025 - 23 Kasım 2025)
         if let start = calendar.date(from: DateComponents(year: 2025, month: 11, day: 15)),
-           let end = calendar.date(from: DateComponents(year: 2025, month: 11, day: 23)) {
+            let end = calendar.date(from: DateComponents(year: 2025, month: 11, day: 23))
+        {
             breaks.append((start, end, "1. Ara Tatil"))
         }
 
         // Yılbaşı Tatili (1 Ocak 2026)
         if let start = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)),
-           let end = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1)) {
+            let end = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1))
+        {
             breaks.append((start, end, "Yılbaşı Tatili"))
         }
 
         // Bahar Dönemi Ara Tatili (13 Nisan 2026 - 17 Nisan 2026)
         if let start = calendar.date(from: DateComponents(year: 2026, month: 4, day: 13)),
-           let end = calendar.date(from: DateComponents(year: 2026, month: 4, day: 17)) {
+            let end = calendar.date(from: DateComponents(year: 2026, month: 4, day: 17))
+        {
             breaks.append((start, end, "2. Ara Tatil"))
         }
 
         return breaks
     }
 
-    /// Belirli bir dönem için MEB preset'ini uygular
+    /// Hangi günlerin atlanacağını **saf hesaplama** ile belirler.
+    /// SwiftData'ya dokunmaz; `Task.detached` içinde güvenle çalıştırılabilir.
+    /// - Parameters:
+    ///   - start: Dönem başlangıç tarihi
+    ///   - end: Dönem bitiş tarihi
+    ///   - weekendRule: Hafta sonu kuralı
+    /// - Returns: Atlanacak günlerin listesi (Sendable)
+    nonisolated static func computeSkippedDays(
+        start: Date,
+        end: Date,
+        weekendRule: WeekendRule
+    ) -> [SkippedDayData] {
+        let calendar = Calendar.current
+        let breaks = getSemesterBreaks()
+        let holidayInterval = DateInterval(start: start, end: end)
+        let holidays = HolidayProvider.getHolidays(in: holidayInterval)
+
+        var result: [SkippedDayData] = []
+        var currentDate = calendar.startOfDay(for: start)
+        let endDay = calendar.startOfDay(for: end)
+
+        while currentDate <= endDay {
+            var skipType: SkipType?
+            var reason = ""
+
+            // Öncelik: Ara tatil > Resmi tatil > Hafta sonu
+            if let br = breaks.first(where: { currentDate >= $0.start && currentDate <= $0.end }) {
+                skipType = .semesterBreak
+                reason = br.name
+            } else if let hol = holidays.first(where: {
+                calendar.isDate($0.date, inSameDayAs: currentDate)
+            }) {
+                skipType = .holiday
+                reason = hol.name
+            } else if weekendRule.isSkipped(
+                weekday: calendar.component(.weekday, from: currentDate)
+            ) {
+                skipType = .weekend
+                reason = "hafta sonu"
+            }
+
+            if let type = skipType {
+                result.append(SkippedDayData(date: currentDate, reason: reason, type: type))
+            }
+
+            currentDate =
+                calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        }
+
+        return result
+    }
+
+    /// Belirli bir dönem için MEB preset'ini uygular.
+    /// - Note: Bu metod main thread'de **senkron** çalışır.
+    ///   Yeni kodda `computeSkippedDays` + manuel insert tercih edilmeli.
     /// - Parameters:
     ///   - semester: Güncellenecek semester
     ///   - context: Model context
     static func applyMEBPreset(to semester: Semester, in context: ModelContext) {
-        let calendar = Calendar.current
-        
-        // 1. Data gathered
-        let breaks = getSemesterBreaks()
-        let holidayInterval = DateInterval(start: semester.startDate, end: semester.endDate)
-        let holidays = HolidayProvider.getHolidays(in: holidayInterval)
-        
-        // 2. Iterate through all days in range
-        var currentDate = calendar.startOfDay(for: semester.startDate)
-        let endDate = calendar.startOfDay(for: semester.endDate)
-        
-        while currentDate <= endDate {
-            var skipType: SkipType?
-            var reason: String = ""
-            
-            // Priority: Break > Holiday > Weekend
-            if let breakPeriod = breaks.first(where: { currentDate >= $0.start && currentDate <= $0.end }) {
-                skipType = .semesterBreak
-                reason = breakPeriod.name
-            } else if let holiday = holidays.first(where: { calendar.isDate($0.date, inSameDayAs: currentDate) }) {
-                skipType = .holiday
-                reason = holiday.name
-            } else if semester.weekendRule.isSkipped(weekday: calendar.component(.weekday, from: currentDate)) {
-                skipType = .weekend
-                reason = "hafta sonu"
-            }
-            
-            if let type = skipType {
-                let skippedDay = SkippedDay(
-                    date: currentDate,
-                    reason: reason,
-                    type: type
-                )
-                skippedDay.semester = semester
-                context.insert(skippedDay)
-            }
-            
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        let skippedDays = computeSkippedDays(
+            start: semester.startDate,
+            end: semester.endDate,
+            weekendRule: semester.weekendRule
+        )
+
+        for dayData in skippedDays {
+            let skippedDay = SkippedDay(
+                date: dayData.date,
+                reason: dayData.reason,
+                type: dayData.type
+            )
+            skippedDay.semester = semester
+            context.insert(skippedDay)
         }
-        
-        // 3. Set weekendRule to .none so user can manage individual weekend days via SkippedDay
+
+        // SkippedDay'ler üzerinden yönetildiği için weekendRule .none yapılır
         semester.weekendRule = .none
     }
 

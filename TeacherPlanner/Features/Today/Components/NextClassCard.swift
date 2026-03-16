@@ -146,22 +146,24 @@ struct NextClassCard: View {
                 Group {
                     if interval <= 0 {
                         Text("Başladı")
-                            .font(.title3.weight(.heavy))
+                            .font(.system(.title2, design: .rounded, weight: .heavy))
                             .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.1), radius: 2)
                     } else {
                         Text(formattedInterval(interval))
-                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .font(.system(size: 32, weight: .heavy, design: .rounded))
                             .foregroundStyle(.white)
-                            .minimumScaleFactor(0.6)
+                            .minimumScaleFactor(0.7)
                             .lineLimit(1)
+                            .shadow(color: .black.opacity(0.1), radius: 2)
                     }
                 }
 
                 Text(interval <= 0 ? "devam ediyor" : "kaldı")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .font(.system(.caption2, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.85))
                     .textCase(.uppercase)
-                    .tracking(0.5)
+                    .tracking(1.0)
             } else {
                 // Başlangıç zamanı hesaplanamadı
                 Image(systemName: "clock.badge.questionmark")
@@ -169,7 +171,7 @@ struct NextClassCard: View {
                     .foregroundStyle(.white.opacity(0.6))
             }
         }
-        .frame(minWidth: 72, alignment: .trailing)
+        .frame(minWidth: 80, alignment: .trailing)
     }
 
     // MARK: - Helpers

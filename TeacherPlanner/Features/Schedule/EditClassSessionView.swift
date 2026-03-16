@@ -80,7 +80,7 @@ struct EditClassSessionView: View {
                         Picker("Ders Seç", selection: $selectedCourse) {
                             Text("Seçilmedi").tag(nil as Course?)
                             ForEach(courses) { course in
-                                Label(course.title, systemImage: course.symbolName ?? "book")
+                                Label(course.title, systemImage: course.symbolName)
                                     .tag(course as Course?)
                             }
                         }

@@ -2,15 +2,16 @@
 //  QuickAddBar.swift
 //  TeacherPlanner
 //
-//  Created by Akif AYDIN on 9.03.2026.
-//
 
 import SwiftUI
 
 struct QuickAddBar: View {
-    @Environment(\.modelContext) private var modelContext
     @State private var showingAddItem = false
     @State private var showingAddNote = false
+
+    private var today: Date {
+        Calendar.current.startOfDay(for: Date())
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -40,10 +41,10 @@ struct QuickAddBar: View {
         }
         .padding(.horizontal)
         .sheet(isPresented: $showingAddItem) {
-            EditPlannerItemView(type: .task)
+            EditPlannerItemView(type: .task, prefillDueDate: today)
         }
         .sheet(isPresented: $showingAddNote) {
-            EditPlannerItemView(type: .note)
+            EditPlannerItemView(type: .note, prefillDueDate: today)
         }
     }
 }

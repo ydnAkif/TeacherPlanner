@@ -6,6 +6,18 @@
 import SwiftData
 import SwiftUI
 
+// MARK: - Editing State (Identifiable, sheet(item:) için)
+
+private struct EditingPeriod: Identifiable {
+    let id: UUID
+    var index: Int
+    var title: String
+    var startTime: Date
+    var endTime: Date
+}
+
+// MARK: - PeriodSetupView
+
 struct PeriodSetupView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -15,15 +27,15 @@ struct PeriodSetupView: View {
     let weekendRule: WeekendRule
     let onComplete: () -> Void
 
+    // MARK: State
+
     @State private var periods: [PeriodRow] = []
-    @State private var editingIndex: Int? = nil
+    @State private var editingPeriod: EditingPeriod? = nil
+    @State private var isSaving = false
+    @State private var saveError: AppError?
 
-    // Geçici düzenleme state'i
-    @State private var editTitle: String = ""
-    @State private var editStart: Date = Date()
-    @State private var editEnd: Date = Date()
+    // MARK: In-memory model
 
-    // MARK: - Yardımcı model (SwiftData'ya gitmeden önce in-memory tutar)
     struct PeriodRow: Identifiable {
         let id: UUID
         var title: String
@@ -32,21 +44,17 @@ struct PeriodSetupView: View {
         var orderIndex: Int
     }
 
+    // MARK: - Body
+
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [AppColors.primary.opacity(0.05), .clear],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
+            headerSection
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
 
-            VStack(spacing: 0) {
-                headerSection
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-
-                List {
+            List {
+                Section {
                     ForEach(Array(periods.enumerated()), id: \.element.id) { index, row in
                         periodRow(index: index, row: row)
                     }
@@ -54,39 +62,45 @@ struct PeriodSetupView: View {
                         periods.remove(atOffsets: offsets)
                         reindex()
                     }
+                }
 
-                    Section {
-                        Button(action: addNewPeriod) {
-                            Label("Yeni Ders Saati Ekle", systemImage: "plus.circle.fill")
-                                .foregroundStyle(AppColors.primary)
-                        }
+                Section {
+                    Button {
+                        addNewPeriod()
+                    } label: {
+                        Label("Yeni Ders Saati Ekle", systemImage: "plus.circle.fill")
+                            .foregroundStyle(AppColors.primary)
                     }
                 }
-                .listStyle(.insetGrouped)
-
-                finishButton
-                    .padding()
             }
+            .listStyle(.insetGrouped)
+
+            finishButton
+                .padding(.horizontal)
+                .padding(.vertical, 12)
         }
+        .background(
+            LinearGradient(
+                colors: [AppColors.primary.opacity(0.04), .clear],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+        )
         .navigationTitle("Ders Saatleri")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(false)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Tamamla") {
-                    finish()
-                }
-                .fontWeight(.semibold)
+                Button("Tamamla", action: finish)
+                    .fontWeight(.semibold)
+                    .disabled(periods.isEmpty || isSaving)
             }
         }
-        .sheet(
-            isPresented: Binding(
-                get: { editingIndex != nil },
-                set: { if !$0 { editingIndex = nil } }
-            )
-        ) {
-            editSheet
+        // sheet(item:) — isPresented: Bool'dan daha güvenilir
+        .sheet(item: $editingPeriod) { ep in
+            editSheet(for: ep)
         }
+        .errorAlert(error: $saveError)
         .onAppear {
             if periods.isEmpty {
                 periods = defaultPeriods()
@@ -97,8 +111,8 @@ struct PeriodSetupView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(spacing: 12) {
-            stepIndicator(current: 2, total: 2)
+        VStack(spacing: 10) {
+            stepDots(current: 3, total: 3)
 
             VStack(spacing: 4) {
                 Text("Ders Saatlerini Ayarla")
@@ -108,10 +122,10 @@ struct PeriodSetupView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, 4)
     }
 
-    private func stepIndicator(current: Int, total: Int) -> some View {
+    private func stepDots(current: Int, total: Int) -> some View {
         HStack(spacing: 8) {
             ForEach(1...total, id: \.self) { step in
                 Capsule()
@@ -121,172 +135,117 @@ struct PeriodSetupView: View {
         }
     }
 
-    // MARK: - Satır
+    // MARK: - Period Row
 
     private func periodRow(index: Int, row: PeriodRow) -> some View {
-        Button {
-            editingIndex = index
-            editTitle = row.title
-            editStart = row.startTime
-            editEnd = row.endTime
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(row.title)
-                        .font(.body)
-                        .foregroundStyle(.primary)
-                    Text(timeRangeString(start: row.startTime, end: row.endTime))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "pencil")
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(row.title)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                Text(timeRangeString(start: row.startTime, end: row.endTime))
                     .font(.caption)
-                    .foregroundStyle(AppColors.primary.opacity(0.6))
+                    .foregroundStyle(.secondary)
             }
-            .contentShape(Rectangle())
+            Spacer()
+            Image(systemName: "pencil")
+                .font(.caption)
+                .foregroundStyle(AppColors.primary.opacity(0.5))
         }
-        .buttonStyle(.plain)
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                withAnimation {
-                    periods.remove(at: index)
-                    reindex()
-                }
-            } label: {
-                Label("Sil", systemImage: "trash")
-            }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            editingPeriod = EditingPeriod(
+                id: row.id,
+                index: index,
+                title: row.title,
+                startTime: row.startTime,
+                endTime: row.endTime
+            )
         }
     }
 
-    // MARK: - Düzenleme Sheet
+    // MARK: - Edit Sheet
 
-    private var editSheet: some View {
-        NavigationStack {
-            Form {
-                Section("Ders Adı") {
-                    TextField("Örn: 1. Ders", text: $editTitle)
+    @ViewBuilder
+    private func editSheet(for ep: EditingPeriod) -> some View {
+        EditPeriodSheetView(
+            initialTitle: ep.title,
+            initialStart: ep.startTime,
+            initialEnd: ep.endTime,
+            onSave: { newTitle, newStart, newEnd in
+                if let idx = periods.firstIndex(where: { $0.id == ep.id }) {
+                    periods[idx].title = newTitle
+                    periods[idx].startTime = newStart
+                    periods[idx].endTime = newEnd
                 }
-
-                Section("Saatler") {
-                    DatePicker(
-                        "Başlangıç",
-                        selection: $editStart,
-                        displayedComponents: .hourAndMinute
-                    )
-                    DatePicker(
-                        "Bitiş",
-                        selection: $editEnd,
-                        in: editStart...,
-                        displayedComponents: .hourAndMinute
-                    )
-
-                    if editEnd <= editStart {
-                        Label(
-                            "Bitiş saati başlangıçtan sonra olmalı",
-                            systemImage: "exclamationmark.triangle"
-                        )
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                    }
-                }
-
-                Section {
-                    HStack {
-                        Image(systemName: "clock")
-                            .foregroundStyle(.secondary)
-                        Text("Süre: \(durationMinutes(start: editStart, end: editEnd)) dakika")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                editingPeriod = nil
+            },
+            onCancel: {
+                editingPeriod = nil
             }
-            .navigationTitle(editTitle.isEmpty ? "Ders Saati" : editTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("İptal") {
-                        editingIndex = nil
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Kaydet") {
-                        saveEdit()
-                    }
-                    .disabled(
-                        editTitle.trimmingCharacters(in: .whitespaces).isEmpty
-                            || editEnd <= editStart
-                    )
-                    .fontWeight(.semibold)
-                }
-            }
-        }
-        .presentationDetents([.medium])
+        )
     }
 
-    // MARK: - Alt Buton
+    // MARK: - Bottom Button
 
     private var finishButton: some View {
         Button(action: finish) {
-            HStack {
-                Image(systemName: "checkmark.circle.fill")
-                Text("Kurulumu Tamamla")
-                    .fontWeight(.bold)
+            HStack(spacing: 10) {
+                if isSaving {
+                    ProgressView().tint(.white).scaleEffect(0.9)
+                    Text("Kaydediliyor…").fontWeight(.bold)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("Kurulumu Tamamla").fontWeight(.bold)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(periods.isEmpty ? Color.gray.opacity(0.3) : AppColors.primary)
+            .background(periods.isEmpty || isSaving ? Color.gray.opacity(0.3) : AppColors.primary)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(
-                color: AppColors.primary.opacity(periods.isEmpty ? 0 : 0.3),
+                color: AppColors.primary.opacity(periods.isEmpty || isSaving ? 0 : 0.3),
                 radius: 10, x: 0, y: 5
             )
         }
-        .buttonStyle(.plain)
-        .disabled(periods.isEmpty)
+        .disabled(periods.isEmpty || isSaving)
     }
 
-    // MARK: - Aksiyonlar
-
-    private func saveEdit() {
-        guard let idx = editingIndex else { return }
-        periods[idx].title = editTitle.trimmingCharacters(in: .whitespaces)
-        periods[idx].startTime = editStart
-        periods[idx].endTime = editEnd
-        editingIndex = nil
-    }
+    // MARK: - Actions
 
     private func addNewPeriod() {
         let calendar = Calendar.current
-        let baseDate = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1))!
+        let base = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1))!
         let nextIndex = periods.count + 1
 
-        // Son ders saatinin bitişinden 10 dk sonra başlat
         let lastEnd = periods.last?.endTime
         let suggestedStart: Date
-        if let lastEnd = lastEnd {
+        if let lastEnd {
             suggestedStart = calendar.date(byAdding: .minute, value: 10, to: lastEnd) ?? lastEnd
         } else {
-            suggestedStart = calendar.date(bySettingHour: 8, minute: 40, second: 0, of: baseDate)!
+            suggestedStart = calendar.date(bySettingHour: 8, minute: 40, second: 0, of: base)!
         }
         let suggestedEnd =
             calendar.date(byAdding: .minute, value: 40, to: suggestedStart) ?? suggestedStart
 
-        periods.append(
-            PeriodRow(
-                id: UUID(),
-                title: "\(nextIndex). Ders",
-                startTime: suggestedStart,
-                endTime: suggestedEnd,
-                orderIndex: nextIndex
-            ))
+        let newRow = PeriodRow(
+            id: UUID(),
+            title: "\(nextIndex). Ders",
+            startTime: suggestedStart,
+            endTime: suggestedEnd,
+            orderIndex: nextIndex
+        )
+        periods.append(newRow)
 
-        // Hemen düzenleme modunu aç
-        editingIndex = periods.count - 1
-        editTitle = periods.last!.title
-        editStart = periods.last!.startTime
-        editEnd = periods.last!.endTime
+        // Yeni eklenen satırı hemen düzenlemeye aç
+        editingPeriod = EditingPeriod(
+            id: newRow.id,
+            index: periods.count - 1,
+            title: newRow.title,
+            startTime: newRow.startTime,
+            endTime: newRow.endTime
+        )
     }
 
     private func reindex() {
@@ -295,38 +254,86 @@ struct PeriodSetupView: View {
         }
     }
 
+    /// Arka plan hesaplaması ile kayıt — UI donmasını önler.
+    /// Tatil/hafta sonu günleri `Task.detached` içinde hesaplanır,
+    /// SwiftData insertionları ise main thread'e döndükten sonra yapılır.
     private func finish() {
-        // 1. Semester'ı önce context'e ekle (ilişki kurabilmek için şart)
-        let semester = Semester(
-            name: semesterName,
-            startDate: startDate,
-            endDate: endDate,
-            weekendRule: weekendRule,
-            isActive: true
-        )
-        modelContext.insert(semester)
+        guard !periods.isEmpty, !isSaving else { return }
+        isSaving = true
 
-        // 2. MEB tatil/ara tatil preset'ini uygula (semester artık context'te)
-        MEBPresetProvider.applyMEBPreset(to: semester, in: modelContext)
+        // @State property'lerini Task'a geçmeden önce yerel değişkenlere kopyala
+        let capturedPeriods = periods
+        let capturedSemesterName = semesterName
+        let capturedStart = startDate
+        let capturedEnd = endDate
+        let capturedWeekendRule = weekendRule
 
-        // 3. Ders saatlerini kaydet
-        for row in periods {
-            let def = PeriodDefinition(
-                id: row.id,
-                title: row.title,
-                startTime: row.startTime,
-                endTime: row.endTime,
-                orderIndex: row.orderIndex
+        Task { @MainActor in
+            // Loading göstergesinin render edilmesi için bir runloop fırsatı ver
+            await Task.yield()
+
+            // 1. Semester oluştur
+            let semester = Semester(
+                name: capturedSemesterName,
+                startDate: capturedStart,
+                endDate: capturedEnd,
+                weekendRule: capturedWeekendRule,
+                isActive: true
             )
-            modelContext.insert(def)
-        }
+            modelContext.insert(semester)
 
-        // 4. Hepsini tek seferde kaydet
-        modelContext.saveResult("PeriodSetupView: finish failed")
-        onComplete()
+            // 2. Ders saatlerini ekle
+            for row in capturedPeriods {
+                let def = PeriodDefinition(
+                    id: row.id,
+                    title: row.title,
+                    startTime: row.startTime,
+                    endTime: row.endTime,
+                    orderIndex: row.orderIndex
+                )
+                modelContext.insert(def)
+            }
+
+            // 3. Tatil/hafta sonu günlerini arka planda hesapla (CPU-yoğun, Sendable)
+            //    Task.detached → main thread'i bloklamaz, UI tepkili kalır
+            let skippedDayData = await Task.detached(priority: .userInitiated) {
+                MEBPresetProvider.computeSkippedDays(
+                    start: capturedStart,
+                    end: capturedEnd,
+                    weekendRule: capturedWeekendRule
+                )
+            }.value
+
+            // 4. Hesaplanan günleri main thread'de ekle (hızlı, bellekte)
+            for dayData in skippedDayData {
+                let skippedDay = SkippedDay(
+                    date: dayData.date,
+                    reason: dayData.reason,
+                    type: dayData.type
+                )
+                skippedDay.semester = semester
+                modelContext.insert(skippedDay)
+            }
+
+            // 5. WeekendRule'u .none yap (artık SkippedDay'ler üzerinden yönetilecek)
+            semester.weekendRule = .none
+
+            // 6. Hepsini kaydet
+            let result = modelContext.saveResult("PeriodSetupView: finish failed")
+
+            isSaving = false
+
+            switch result {
+            case .failure(let error):
+                saveError = error
+            case .success:
+                // RootView'daki onboardingComplete = true tetiklenir
+                onComplete()
+            }
+        }
     }
 
-    // MARK: - Yardımcılar
+    // MARK: - Helpers
 
     private func timeRangeString(start: Date, end: Date) -> String {
         let f = DateFormatter()
@@ -334,11 +341,7 @@ struct PeriodSetupView: View {
         return "\(f.string(from: start)) – \(f.string(from: end))"
     }
 
-    private func durationMinutes(start: Date, end: Date) -> Int {
-        max(0, Calendar.current.dateComponents([.minute], from: start, to: end).minute ?? 0)
-    }
-
-    // MARK: - Varsayılan saatler
+    // MARK: - Default Periods (MEB standart)
 
     private func defaultPeriods() -> [PeriodRow] {
         let c = Calendar.current
@@ -364,18 +367,127 @@ struct PeriodSetupView: View {
             PeriodRow(
                 id: UUID(), title: "6. Ders", startTime: t(13, 50), endTime: t(14, 30),
                 orderIndex: 6),
+            PeriodRow(
+                id: UUID(), title: "7. Ders", startTime: t(14, 40), endTime: t(15, 20),
+                orderIndex: 7),
         ]
     }
 }
 
+// MARK: - EditPeriodSheetView
+
+/// sheet(item:) ile sunulan bağımsız edit ekranı.
+/// State tamamen kendi içinde — PeriodSetupView'a bağımlılık yok.
+private struct EditPeriodSheetView: View {
+    let initialTitle: String
+    let initialStart: Date
+    let initialEnd: Date
+    let onSave: (String, Date, Date) -> Void
+    let onCancel: () -> Void
+
+    @State private var title: String
+    @State private var startTime: Date
+    @State private var endTime: Date
+
+    init(
+        initialTitle: String,
+        initialStart: Date,
+        initialEnd: Date,
+        onSave: @escaping (String, Date, Date) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.initialTitle = initialTitle
+        self.initialStart = initialStart
+        self.initialEnd = initialEnd
+        self.onSave = onSave
+        self.onCancel = onCancel
+        _title = State(initialValue: initialTitle)
+        _startTime = State(initialValue: initialStart)
+        _endTime = State(initialValue: initialEnd)
+    }
+
+    private var isValid: Bool {
+        !title.trimmingCharacters(in: .whitespaces).isEmpty && endTime > startTime
+    }
+
+    private var durationMinutes: Int {
+        max(0, Calendar.current.dateComponents([.minute], from: startTime, to: endTime).minute ?? 0)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Ders Adı") {
+                    TextField("Örn: 1. Ders", text: $title)
+                        .autocorrectionDisabled()
+                }
+
+                Section("Saatler") {
+                    DatePicker(
+                        "Başlangıç",
+                        selection: $startTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    DatePicker(
+                        "Bitiş",
+                        selection: $endTime,
+                        displayedComponents: .hourAndMinute
+                    )
+
+                    if endTime <= startTime {
+                        Label(
+                            "Bitiş saati başlangıçtan sonra olmalı",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    }
+                }
+
+                Section {
+                    HStack {
+                        Image(systemName: "clock")
+                            .foregroundStyle(.secondary)
+                        Text("Süre: \(durationMinutes) dakika")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle(title.isEmpty ? "Ders Saati" : title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("İptal", action: onCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Kaydet") {
+                        onSave(
+                            title.trimmingCharacters(in: .whitespaces),
+                            startTime,
+                            endTime
+                        )
+                    }
+                    .disabled(!isValid)
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+// MARK: - Preview
+
 #Preview {
     NavigationStack {
         PeriodSetupView(
-            semesterName: "2025-2026 Güz Dönemi",
-            startDate: Date(),
-            endDate: Date(),
+            semesterName: "2025-2026 Bahar Dönemi",
+            startDate: Calendar.current.date(from: DateComponents(year: 2026, month: 2, day: 9))!,
+            endDate: Calendar.current.date(from: DateComponents(year: 2026, month: 6, day: 19))!,
             weekendRule: .saturdaySunday,
             onComplete: {}
         )
     }
+    .modelContainer(try! ModelContainerFactory.createPreview())
 }

@@ -11,6 +11,9 @@ import SwiftUI
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
 
+    /// RootView'dan gelen tamamlama callback'i
+    let onComplete: () -> Void
+
     // Adım 1 state
     @State private var schoolName: String = ""
     @State private var academicYear: String = Self.currentAcademicYear()
@@ -33,7 +36,7 @@ struct OnboardingView: View {
                 semesterType: $semesterType,
                 startDate: $startDate,
                 endDate: $endDate,
-                onSave: {}
+                onSave: onComplete
             )
         }
     }
@@ -387,6 +390,6 @@ private func stepDots(current: Int, total: Int = 3) -> some View {
 // MARK: - Preview
 
 #Preview {
-    OnboardingView()
+    OnboardingView(onComplete: {})
         .modelContainer(try! ModelContainerFactory.createPreview())
 }

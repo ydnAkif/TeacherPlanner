@@ -12,6 +12,7 @@ import SwiftUI
 struct TeacherPlannerApp: App {
     @State private var container: ModelContainer?
     @State private var appEnvironment: AppEnvironment?
+    @State private var startupError: String?
 
     static var isUITesting: Bool {
         CommandLine.arguments.contains("--uitesting")
@@ -25,33 +26,92 @@ struct TeacherPlannerApp: App {
         WindowGroup {
             Group {
                 if let container, let appEnvironment {
-                    RootView()
+                    RootView(appEnvironment: appEnvironment)
                         .modelContainer(container)
-                        .environment(\.appEnvironment, appEnvironment)
                         .environment(\.isUITesting, Self.isUITesting)
+                } else if let error = startupError {
+                    startupErrorView(message: error)
                 } else {
-                    ProgressView()
+                    ProgressView("Başlatılıyor…")
+                        .progressViewStyle(.circular)
                 }
             }
             .task {
                 guard container == nil else { return }
-                do {
-                    let newContainer: ModelContainer
-                    if Self.isUITesting {
-                        newContainer = try ModelContainerFactory.createPreview()
-                    } else {
-                        newContainer = try ModelContainerFactory.create()
-                    }
-                    container = newContainer
-                    appEnvironment = AppEnvironment(modelContext: newContainer.mainContext)
-                    
-                    if Self.shouldSeedData {
-                        try SampleDataSeeder.seed(newContainer)
-                    }
-                } catch {
-                    fatalError("Model container oluşturulamadı: \(error)")
-                }
+                await initializeContainer()
             }
         }
+    }
+
+    // MARK: - Container Initialization
+
+    private func initializeContainer() async {
+        do {
+            let newContainer = try makeContainer()
+            container = newContainer
+            appEnvironment = AppEnvironment(modelContext: newContainer.mainContext)
+
+            if Self.shouldSeedData {
+                try SampleDataSeeder.seed(newContainer)
+            }
+        } catch {
+            // İlk deneme başarısız oldu — mevcut store bozuk olabilir.
+            // Veritabanını silerek temiz bir başlangıç yap.
+            AppLogger.warning(
+                "TeacherPlannerApp: İlk container oluşturma başarısız (\(error.localizedDescription)), store sıfırlanıyor…"
+            )
+
+            do {
+                ModelContainerFactory.eraseAllData()
+                let freshContainer = try ModelContainerFactory.create()
+                container = freshContainer
+                appEnvironment = AppEnvironment(modelContext: freshContainer.mainContext)
+
+                AppLogger.info("TeacherPlannerApp: Store sıfırlandı, temiz başlangıç yapıldı.")
+            } catch let recoveryError {
+                AppLogger.error(
+                    recoveryError,
+                    message: "TeacherPlannerApp: Kurtarma da başarısız"
+                )
+                startupError = recoveryError.localizedDescription
+            }
+        }
+    }
+
+    private func makeContainer() throws -> ModelContainer {
+        if Self.isUITesting {
+            return try ModelContainerFactory.createPreview()
+        } else {
+            return try ModelContainerFactory.create()
+        }
+    }
+
+    // MARK: - Startup Error View
+
+    private func startupErrorView(message: String) -> some View {
+        VStack(spacing: 24) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.orange)
+
+            VStack(spacing: 8) {
+                Text("Uygulama Başlatılamadı")
+                    .font(.title2.bold())
+                Text(
+                    "Veriler yüklenirken bir sorun oluştu. Lütfen uygulamayı silip yeniden yükleyin."
+                )
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            }
+
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
     }
 }

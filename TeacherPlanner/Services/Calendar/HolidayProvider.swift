@@ -11,17 +11,17 @@ import Foundation
 struct HolidayProvider {
 
     /// Sabit resmi tatiller (her yıl aynı tarih)
-    static let fixedHolidays: [(month: Int, day: Int, name: String)] = [
+    nonisolated static let fixedHolidays: [(month: Int, day: Int, name: String)] = [
         (1, 1, "Yılbaşı Tatili"),
         (4, 23, "Ulusal Egemenlik ve Çocuk Bayramı"),
         (5, 19, "Atatürk'ü Anma, Gençlik ve Spor Bayramı"),
         (8, 30, "Zafer Bayramı"),
-        (10, 29, "Cumhuriyet Bayramı")
+        (10, 29, "Cumhuriyet Bayramı"),
     ]
 
     /// Dini bayramlar için 2025-2026 yılları (Hicri takvime göre değişir)
     /// Kaynak: Diyanet İşleri Başkanlığı
-    static func getReligiousHolidays(for year: Int) -> [(date: Date, name: String)] {
+    nonisolated static func getReligiousHolidays(for year: Int) -> [(date: Date, name: String)] {
         let calendar = Calendar.current
         var holidays: [(date: Date, name: String)] = []
 
@@ -97,7 +97,7 @@ struct HolidayProvider {
     }
 
     /// Belirli bir yıl için tüm resmi tatilleri döner
-    static func getAllHolidays(for year: Int) -> [(date: Date, name: String)] {
+    nonisolated static func getAllHolidays(for year: Int) -> [(date: Date, name: String)] {
         let calendar = Calendar.current
         var holidays: [(date: Date, name: String)] = []
 
@@ -117,7 +117,7 @@ struct HolidayProvider {
     }
 
     /// Tarih aralığındaki tatilleri döner
-    static func getHolidays(in range: DateInterval) -> [(date: Date, name: String)] {
+    nonisolated static func getHolidays(in range: DateInterval) -> [(date: Date, name: String)] {
         let calendar = Calendar.current
         let startYear = calendar.component(.year, from: range.start)
         let endYear = calendar.component(.year, from: range.end)

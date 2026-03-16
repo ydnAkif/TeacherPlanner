@@ -19,7 +19,7 @@ enum WeekendRule: String, Codable, CaseIterable, Sendable {
     case none = "none"
 
     /// Skip edilen weekdays (Calendar.weekday: 1=Pazar, 7=Cumartesi)
-    var skippedWeekdays: Set<Int> {
+    nonisolated var skippedWeekdays: Set<Int> {
         switch self {
         case .saturdaySunday:
             return [1, 7]  // Pazar ve Cumartesi
@@ -31,7 +31,7 @@ enum WeekendRule: String, Codable, CaseIterable, Sendable {
     }
 
     /// Verilen weekday'in skip edilip edilmeyeceğini kontrol eder
-    func isSkipped(weekday: Int) -> Bool {
+    nonisolated func isSkipped(weekday: Int) -> Bool {
         skippedWeekdays.contains(weekday)
     }
 }
