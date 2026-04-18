@@ -13,7 +13,16 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.appEnvironment) private var appEnvironment
 
+    @AppStorage(Constants.UI.Keys.appearanceMode) private var appearanceMode: Int = 0
     @StateObject private var viewModel = SettingsViewModel()
+
+    private var appearanceModeLabel: String {
+        switch appearanceMode {
+        case 1: return "Açık"
+        case 2: return "Koyu"
+        default: return "Sistem"
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -53,10 +62,16 @@ struct SettingsView: View {
                 }
 
                 Section("Görünüm") {
-                    Picker("Tema", selection: $viewModel.appearanceMode) {
-                        Text("Sistem").tag(0)
-                        Text("Açık").tag(1)
-                        Text("Koyu").tag(2)
+                    NavigationLink {
+                        AppearanceSettingsView()
+                    } label: {
+                        HStack {
+                            Label("Tema", systemImage: "paintbrush")
+                            Spacer()
+                            Text(appearanceModeLabel)
+                                .foregroundStyle(.secondary)
+                                .font(.subheadline)
+                        }
                     }
                 }
 

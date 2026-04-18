@@ -36,12 +36,6 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    @Published var appearanceMode: Int {
-        didSet {
-            UserDefaults.standard.set(appearanceMode, forKey: Constants.UI.Keys.appearanceMode)
-        }
-    }
-
     // MARK: - Dependencies
     private var scheduler: NotificationScheduler?
 
@@ -58,8 +52,6 @@ final class SettingsViewModel: ObservableObject {
         self.reminderMinutesBefore =
             savedMinutes == 0 ? Constants.Notification.defaultReminderMinutesBefore : savedMinutes
 
-        self.appearanceMode = UserDefaults.standard.integer(
-            forKey: Constants.UI.Keys.appearanceMode)
     }
 
     // MARK: - Setup

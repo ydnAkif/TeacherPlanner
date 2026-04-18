@@ -14,6 +14,16 @@ struct TeacherPlannerApp: App {
     @State private var appEnvironment: AppEnvironment?
     @State private var startupError: String?
 
+    @AppStorage(Constants.UI.Keys.appearanceMode) private var appearanceMode: Int = 0
+
+    private var preferredColorScheme: ColorScheme? {
+        switch appearanceMode {
+        case 1: return .light
+        case 2: return .dark
+        default: return nil
+        }
+    }
+
     static var isUITesting: Bool {
         CommandLine.arguments.contains("--uitesting")
     }
@@ -36,6 +46,7 @@ struct TeacherPlannerApp: App {
                         .progressViewStyle(.circular)
                 }
             }
+            .preferredColorScheme(preferredColorScheme)
             .task {
                 guard container == nil else { return }
                 await initializeContainer()

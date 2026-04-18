@@ -72,8 +72,13 @@ final class TodayViewModel {
         isLoading = false
     }
 
+    /// Dışarıdan tetiklenebilir yenileme (örn: QuickAddBar'dan item eklendiğinde)
+    func refreshPlannerItems() {
+        loadTodayPlannerItems()
+    }
+
     /// Bugünkü planner itemları yükle (ModelContext üzerinden doğrudan fetch)
-    private func loadTodayPlannerItems() {
+    func loadTodayPlannerItems() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today

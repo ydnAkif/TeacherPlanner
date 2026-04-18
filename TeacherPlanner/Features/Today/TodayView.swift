@@ -103,8 +103,10 @@ struct TodayView: View {
                     }
                 )
 
-                QuickAddBar()
-                    .padding(.top, 8)
+                QuickAddBar(onItemAdded: {
+                    viewModel.refreshPlannerItems()
+                })
+                .padding(.top, 8)
             }
             .padding(.vertical)
         }
